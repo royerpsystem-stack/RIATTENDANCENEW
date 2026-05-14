@@ -9,283 +9,345 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --blue:#1a73e8;--blue-d:#0d5cbf;--purple:#6c47ff;--purple-l:#ede9ff;
+  --blue:#1a73e8;--purple:#6c47ff;--purple-l:#ede9ff;
   --bg:#f0f4ff;--card:#fff;--text:#1a1f36;--muted:#6b7280;--border:#e5e7eb;
   --green:#10b981;--red:#ef4444;--amber:#f59e0b;
   --grad:linear-gradient(135deg,#1a73e8,#6c47ff);
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
+
+/* ---- SCREEN SYSTEM ---- */
 .screen{display:none}
-.screen.show{display:block}
+.screen.show{display:flex;flex-direction:column;min-height:100vh}
 
-/* SPLASH */
-#scr-splash{background:var(--grad);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
-.sp-logo{width:84px;height:84px;background:#fff;border-radius:22px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--blue);margin-bottom:18px;animation:logopulse 2s ease-in-out infinite}
-@keyframes logopulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-.sp-title{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:#fff;letter-spacing:1px;margin-bottom:4px}
-.sp-sub{font-size:12px;color:rgba(255,255,255,.65);letter-spacing:3px;margin-bottom:40px}
-.sp-dots{display:flex;gap:9px}
-.sp-dots span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);animation:dotpop 1.4s ease-in-out infinite}
-.sp-dots span:nth-child(2){animation-delay:.22s}.sp-dots span:nth-child(3){animation-delay:.44s}
-@keyframes dotpop{0%,60%,100%{transform:scale(1);opacity:.35}30%{transform:scale(1.4);opacity:1}}
-.sp-slogan{position:absolute;bottom:28px;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:2.5px}
+/* ---- LOADING ---- */
+#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;align-items:center;justify-content:center;z-index:9999;gap:10px;font-size:13px;font-weight:600;color:var(--blue)}
+.spin{width:20px;height:20px;border:2.5px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* TOPBAR */
-.topbar{background:var(--grad);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#fff;flex-shrink:0}
-.topbar-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px}
-.top-actions{display:flex;align-items:center;gap:8px}
-.tbtn{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500}
-.tbtn:hover{background:rgba(255,255,255,.32)}
-.mode-pill{font-size:11px;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px}
-.notif-badge{background:#ef4444;color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;margin-left:3px;vertical-align:top}
+/* ---- TOPBAR ---- */
+.topbar{background:var(--grad);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;flex-shrink:0;position:sticky;top:0;z-index:100}
+.topbar-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.topbar-logo{width:30px;height:30px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.top-actions{display:flex;align-items:center;gap:6px}
+.tbtn{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;display:flex;align-items:center;gap:4px}
+.tbtn:hover{background:rgba(255,255,255,.3)}
+.mode-pill{font-size:10px;background:rgba(255,255,255,.18);padding:3px 9px;border-radius:20px}
+.nb{background:#ef4444;color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;margin-left:2px}
 
-/* LAYOUT */
-.app-body{display:flex;height:calc(100vh - 54px)}
-.sidebar{width:196px;background:#fff;border-right:1px solid var(--border);padding:12px 0;overflow-y:auto;flex-shrink:0}
-.sec-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;padding:10px 18px 5px;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;font-size:13px;color:var(--muted);border-left:3px solid transparent;transition:all .15s;font-weight:500}
+/* ---- LAYOUT ---- */
+.app-wrap{display:flex;flex:1;overflow:hidden;height:calc(100vh - 54px)}
+.sidebar{width:190px;background:#fff;border-right:1px solid var(--border);padding:10px 0;overflow-y:auto;flex-shrink:0;transition:transform .25s}
+.sec-label{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1.2px;padding:10px 16px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--muted);border-left:3px solid transparent;transition:all .15s;font-weight:500;white-space:nowrap}
 .nav-item:hover{background:#f5f7ff;color:var(--blue)}
 .nav-item.active{background:#ede9ff;color:var(--purple);border-left-color:var(--purple)}
-.nav-item i{font-size:15px}
-.main{flex:1;overflow-y:auto;padding:18px}
+.nav-item i{font-size:16px;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:16px}
 
-/* CARDS */
-.card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:16px;margin-bottom:12px}
-.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:12px;color:var(--text)}
+/* ---- CARDS ---- */
+.card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
 
-/* STAT */
+/* ---- STAT CARDS ---- */
 .stat{border-radius:12px;padding:13px;color:#fff;display:flex;flex-direction:column;gap:3px}
-.stat-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1}
-.stat-lbl{font-size:11px;opacity:.85;font-weight:500}
+.stat-num{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
+.stat-lbl{font-size:10px;opacity:.85;font-weight:500}
 .s-blue{background:linear-gradient(135deg,#1a73e8,#4f98f0)}
 .s-red{background:linear-gradient(135deg,#ef4444,#f87171)}
 .s-green{background:linear-gradient(135deg,#10b981,#34d399)}
 .s-amber{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
 .s-purple{background:linear-gradient(135deg,#6c47ff,#a78bfa)}
 
-/* TABLE */
-.tbl-wrap{overflow-x:auto}
+/* ---- TABLE ---- */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{padding:7px 9px;background:#f8fafc;color:var(--muted);font-weight:600;font-size:11px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{padding:7px 9px;background:#f8fafc;color:var(--muted);font-weight:600;font-size:10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:8px 9px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafbff}
 
-/* PILLS */
-.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.p-green{background:#d1fae5;color:#065f46}.p-red{background:#fee2e2;color:#991b1b}
-.p-blue{background:#dbeafe;color:#1e40af}.p-amber{background:#fef3c7;color:#92400e}
-.p-purple{background:#ede9ff;color:#5b21b6}.p-gray{background:#f3f4f6;color:#4b5563}
+/* ---- PILLS ---- */
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.p-green{background:#d1fae5;color:#065f46}
+.p-red{background:#fee2e2;color:#991b1b}
+.p-blue{background:#dbeafe;color:#1e40af}
+.p-amber{background:#fef3c7;color:#92400e}
+.p-purple{background:#ede9ff;color:#5b21b6}
+.p-gray{background:#f3f4f6;color:#4b5563}
 
-/* AVATAR */
-.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+/* ---- AVATAR ---- */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
 
-/* FORM */
-.frow{margin-bottom:11px}
-.flabel{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px}
-.finput,.fselect{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
-.finput:focus,.fselect:focus{border-color:var(--blue)}
-textarea.finput{resize:vertical}
-.btn-pri{background:var(--grad);color:#fff;border:none;border-radius:9px;padding:9px 20px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s}
+/* ---- FORM ---- */
+.frow{margin-bottom:10px}
+.flabel{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px}
+.finput,.fselect{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.finput:focus,.fselect:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+textarea.finput{resize:vertical;min-height:80px}
+.btn-pri{background:var(--grad);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:6px}
 .btn-pri:hover{opacity:.9}
-.btn-out{background:transparent;color:var(--purple);border:1.5px solid var(--purple);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s}
+.btn-pri:disabled{opacity:.55;cursor:not-allowed}
+.btn-out{background:transparent;color:var(--purple);border:1.5px solid var(--purple);border-radius:8px;padding:6px 13px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
 .btn-out:hover{background:var(--purple-l)}
 .btn-sm{padding:4px 9px;font-size:10px;border-radius:6px}
+.btn-danger{border-color:var(--red);color:var(--red)}
+.btn-danger:hover{background:#fee2e2}
 
-/* TABS */
-.tabs{display:flex;gap:4px;background:#f1f5f9;border-radius:9px;padding:4px;margin-bottom:14px}
-.tab{flex:1;text-align:center;padding:6px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s}
-.tab.active{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+/* ---- TABS ---- */
+.tabs{display:flex;gap:3px;background:#f1f5f9;border-radius:9px;padding:3px;margin-bottom:14px}
+.tab{flex:1;text-align:center;padding:7px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s}
+.tab.active{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.1)}
 
-/* ATTENDANCE CIRCLE */
-.att-circ{position:relative;width:90px;height:90px;flex-shrink:0}
+/* ---- ATTENDANCE CIRCLE ---- */
+.att-circ{position:relative;width:88px;height:88px;flex-shrink:0}
 .att-circ svg{transform:rotate(-90deg)}
 .att-circ-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.att-pct-big{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--blue);line-height:1}
-.att-pct-sub{font-size:9px;color:var(--muted);font-weight:500}
+.att-pct-big{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--blue);line-height:1}
+.att-pct-sub{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.5px}
 
-/* PBAR */
+/* ---- PROGRESS BAR ---- */
 .pbar{background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden;margin-top:3px}
 .pbar-fill{height:100%;border-radius:99px;background:var(--grad);transition:width .7s ease}
 
-/* NOTIF */
-.notif-item{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:9px;background:#f8fafc;border:1px solid var(--border);margin-bottom:7px}
-.notif-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+/* ---- NOTIFICATION ITEM ---- */
+.notif-item{display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:10px;background:#f8fafc;border:1px solid var(--border);margin-bottom:7px}
+.notif-ico{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 
-/* CALENDAR */
+/* ---- CALENDAR ---- */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:7px}
-.cal-hd{text-align:center;font-size:10px;font-weight:600;color:var(--muted);padding:3px 0}
+.cal-hd{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:3px 0}
 .cal-cell{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500}
 .cal-present{background:#d1fae5;color:#065f46}
 .cal-absent{background:#fee2e2;color:#991b1b}
 .cal-today{background:var(--blue);color:#fff;font-weight:700}
-.cal-empty{background:transparent;color:var(--border)}
+.cal-empty{color:transparent}
 
-/* FEE ALERT */
-.fee-alert{background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px}
+/* ---- FEE ALERT ---- */
+.fee-alert{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
 
-/* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
-.login-card{background:#fff;border-radius:20px;border:1px solid var(--border);padding:28px;width:330px}
+/* ---- LOGIN SCREENS ---- */
+.auth-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.auth-card{background:#fff;border-radius:20px;border:1px solid var(--border);padding:28px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(26,115,232,.08)}
+.auth-logo{background:var(--grad);border-radius:13px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:#fff;margin-bottom:14px}
 
-/* REGISTER */
-.reg-wrap{min-height:100vh;background:var(--bg);padding:18px;display:flex;align-items:flex-start;justify-content:center;padding-top:30px}
-.reg-card{background:#fff;border-radius:18px;border:1px solid var(--border);padding:24px;width:420px;max-width:100%}
+/* ---- REGISTER SCREEN ---- */
+.reg-wrap{flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:20px;background:var(--bg)}
+.reg-card{background:#fff;border-radius:18px;border:1px solid var(--border);padding:22px;width:100%;max-width:480px;box-shadow:0 4px 24px rgba(26,115,232,.08)}
 
-/* QR */
-.qr-box{border:2px dashed var(--border);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s}
-.qr-box:hover{border-color:var(--blue)}
-.qr-grid{width:100px;height:100px;margin:0 auto 10px;background:#fff;padding:6px;border-radius:6px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.qr-px{border-radius:2px}
+/* ---- QR BOX ---- */
+.qr-box{border:2px dashed var(--border);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.qr-box:hover{border-color:var(--blue);background:#f0f7ff}
+.qr-grid{width:96px;height:96px;margin:0 auto 10px;background:#fff;padding:5px;border-radius:6px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.qr-px{border-radius:1px}
 
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
-.modal{background:#fff;border-radius:16px;padding:22px;width:340px;max-width:100%}
+/* ---- MODAL ---- */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:360px;max-height:90vh;overflow-y:auto}
 
-/* LOADING */
-.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:2000;font-size:14px;color:var(--blue);font-weight:600;gap:10px}
-.spin{width:20px;height:20px;border:2px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ---- INFO / ERROR BOXES ---- */
+.info-box{border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px;display:none}
+.info-err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.info-ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.info-warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;display:flex;gap:8px;align-items:flex-start}
 
+/* ---- SECTIONS ---- */
 [data-sec]{display:none}
 [data-sec].active{display:block}
-::-webkit-scrollbar{width:4px}
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
 
-@media(max-width:600px){
-  .app-body{flex-direction:column}
-  .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:6px 0;display:flex;overflow-x:auto;white-space:nowrap}
-  .sidebar .sec-label{display:none}
-  .nav-item{display:inline-flex;padding:7px 12px;border-left:none;border-bottom:3px solid transparent;font-size:12px}
-  .nav-item.active{border-left:none;border-bottom-color:var(--purple)}
-  .main{height:calc(100vh - 54px - 52px);overflow-y:auto}
+/* ---- MOBILE ---- */
+@media(max-width:640px){
+  .sidebar{
+    position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:56px;
+    border-right:none;border-top:1px solid var(--border);
+    display:flex;flex-direction:row;padding:0;z-index:200;overflow-x:auto;overflow-y:hidden;
+  }
+  .sec-label{display:none}
+  .nav-item{
+    flex-direction:column;gap:2px;padding:6px 12px;border-left:none;
+    border-top:3px solid transparent;font-size:9px;min-width:56px;
+    justify-content:center;align-items:center;
+  }
+  .nav-item.active{border-left:none;border-top-color:var(--purple);background:#f5f3ff}
+  .nav-item i{font-size:18px}
+  #admin-nav{display:contents !important}
+  .app-wrap{flex-direction:column}
+  .main{height:calc(100vh - 54px - 56px);padding:12px;overflow-y:auto}
   .g4{grid-template-columns:1fr 1fr}
   .g2{grid-template-columns:1fr}
+  .modal{max-width:100%}
+  table{font-size:11px}
+  th,td{padding:6px 7px}
+  .hide-mob{display:none}
+}
+@media(min-width:641px){
+  .app-wrap{height:calc(100vh - 54px)}
 }
 </style>
 </head>
 <body>
 
-<!-- LOADING OVERLAY -->
-<div id="loading-overlay" class="loading-overlay" style="display:none">
+<!-- LOADING -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);align-items:center;justify-content:center;z-index:9999;gap:10px;font-size:13px;font-weight:600;color:var(--blue);display:none">
   <div class="spin"></div>
   <span id="loading-text">Loading...</span>
 </div>
 
-<!-- SPLASH -->
-<div id="scr-splash" class="screen show">
-  <div id="splash" style="background:var(--grad);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
-    <div class="sp-logo" style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--blue)">RI</div>
-    <div class="sp-title">ROY INFOTECH</div>
-    <div class="sp-sub">ATTENDANCE APP</div>
-    <div class="sp-dots"><span></span><span></span><span></span></div>
-    <div class="sp-slogan">Learn • Practice • Grow</div>
-  </div>
-</div>
-
-<!-- LOGIN -->
-<div id="scr-login" class="screen">
-  <div class="login-wrap">
-    <div class="login-card">
-      <div style="background:var(--grad);border-radius:13px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:#fff;margin-bottom:14px">RI</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:19px;margin-bottom:3px">Welcome Back</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:18px">ROY INFOTECH Attendance System</div>
+<!-- =============== LOGIN =============== -->
+<div id="scr-login" class="screen show">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">RI</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:2px">Welcome Back</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">ROY INFOTECH Attendance System</div>
       <div class="tabs" id="ltabs">
-        <div class="tab active" onclick="setLTab('student')">Student</div>
-        <div class="tab" onclick="setLTab('admin')">Admin</div>
+        <div class="tab active" onclick="setLTab('student')">🎓 Student</div>
+        <div class="tab" onclick="setLTab('admin')">⚙️ Admin</div>
       </div>
-      <div id="login-hint" style="font-size:11px;color:var(--muted);background:#f8fafc;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.5">
-        <strong>Admin:</strong> <code>admin@royinfotech.in</code> / <code>admin123</code><br>
-        <strong>Student:</strong> Registered email + password
+      <div style="font-size:11px;color:var(--muted);background:#f8fafc;border-radius:8px;padding:9px 11px;margin-bottom:12px;line-height:1.7;border:1px solid var(--border)" id="login-hint">
+        <b>Admin:</b> <code style="background:#eee;padding:1px 5px;border-radius:4px">admin@royinfotech.in</code> / <code style="background:#eee;padding:1px 5px;border-radius:4px">admin123</code><br>
+        <b>Student:</b> Registered email + password
       </div>
-      <div class="frow"><label class="flabel">Email / Mobile</label><input class="finput" id="li-email" placeholder="Enter email or mobile"></div>
-      <div class="frow"><label class="flabel">Password</label><input class="finput" type="password" id="li-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()"></div>
-      <div id="login-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:10px;background:#fee2e2;padding:8px 10px;border-radius:7px"></div>
-      <div style="text-align:right;font-size:11px;color:var(--blue);cursor:pointer;margin-bottom:14px">Forgot password?</div>
-      <button class="btn-pri" style="width:100%;margin-bottom:10px" onclick="doLogin()">Sign In</button>
-      <div style="text-align:center;font-size:12px;color:var(--muted)">New student? <span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="goReg()">Register here</span></div>
+      <div class="frow">
+        <label class="flabel">Email / Mobile</label>
+        <input class="finput" id="li-email" placeholder="Enter email or mobile" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="frow">
+        <label class="flabel">Password</label>
+        <input class="finput" type="password" id="li-pass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-err" class="info-box info-err"></div>
+      <div style="text-align:right;font-size:11px;color:var(--blue);cursor:pointer;margin-bottom:14px" onclick="alert('Contact admin: admin@royinfotech.in')">Forgot password?</div>
+      <button class="btn-pri" style="width:100%;justify-content:center;margin-bottom:10px" id="login-btn" onclick="doLogin()">
+        <i class="ti ti-login"></i> Sign In
+      </button>
+      <div style="text-align:center;font-size:12px;color:var(--muted)">
+        New student? <span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="goReg()">Register here</span>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- REGISTER -->
+<!-- =============== REGISTER =============== -->
 <div id="scr-reg" class="screen">
   <div class="reg-wrap">
     <div class="reg-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-        <div style="background:var(--grad);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff;flex-shrink:0">RI</div>
-        <div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px">Student Registration</div><div style="font-size:11px;color:var(--muted)">ROY INFOTECH Coaching</div></div>
-        <button class="btn-out btn-sm" style="margin-left:auto" onclick="goLogin()"><i class="ti ti-arrow-left"></i> Login</button>
+        <div style="background:var(--grad);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;flex-shrink:0">RI</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px">Student Registration</div>
+          <div style="font-size:11px;color:var(--muted)">ROY INFOTECH Coaching</div>
+        </div>
+        <button class="btn-out btn-sm" style="margin-left:auto" onclick="goLogin()"><i class="ti ti-arrow-left"></i> Back</button>
       </div>
       <div class="g2">
         <div class="frow"><label class="flabel">Full Name *</label><input class="finput" id="r-name" placeholder="Ravi Kumar"></div>
         <div class="frow"><label class="flabel">Father Name *</label><input class="finput" id="r-father" placeholder="Ramesh Kumar"></div>
-        <div class="frow"><label class="flabel">Mobile *</label><input class="finput" id="r-mobile" placeholder="9876543210" maxlength="10"></div>
-        <div class="frow"><label class="flabel">Email *</label><input class="finput" id="r-email" placeholder="ravi@email.com"></div>
+        <div class="frow"><label class="flabel">Mobile *</label><input class="finput" id="r-mobile" placeholder="9876543210" maxlength="10" inputmode="numeric"></div>
+        <div class="frow"><label class="flabel">Email *</label><input class="finput" id="r-email" placeholder="ravi@email.com" type="email"></div>
         <div class="frow"><label class="flabel">Date of Birth</label><input class="finput" type="date" id="r-dob"></div>
         <div class="frow"><label class="flabel">Gender</label>
-          <select class="fselect" id="r-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+          <select class="fselect" id="r-gender">
+            <option value="">Select</option><option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
         <div class="frow"><label class="flabel">Course *</label>
-          <select class="fselect" id="r-course"><option value="">Select Course</option><option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option><option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option><option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option></select></div>
+          <select class="fselect" id="r-course">
+            <option value="">Select Course</option>
+            <option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option>
+            <option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option>
+            <option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option>
+          </select>
+        </div>
         <div class="frow"><label class="flabel">Time Slot *</label>
-          <select class="fselect" id="r-slot"><option value="">Select Slot</option><option>07:00 AM</option><option>08:00 AM</option><option>09:00 AM</option><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>01:00 PM</option><option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option><option>05:00 PM</option><option>06:00 PM</option></select></div>
+          <select class="fselect" id="r-slot">
+            <option value="">Select Slot</option>
+            <option>07:00 AM</option><option>08:00 AM</option><option>09:00 AM</option>
+            <option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option>
+            <option>01:00 PM</option><option>02:00 PM</option><option>03:00 PM</option>
+            <option>04:00 PM</option><option>05:00 PM</option><option>06:00 PM</option>
+          </select>
+        </div>
       </div>
       <div class="frow"><label class="flabel">Address</label><input class="finput" id="r-addr" placeholder="Full address, City, PIN"></div>
       <div class="g2">
-        <div class="frow"><label class="flabel">Password *</label><input class="finput" type="password" id="r-pass" placeholder="Create password"></div>
+        <div class="frow"><label class="flabel">Password *</label><input class="finput" type="password" id="r-pass" placeholder="Min. 6 characters"></div>
         <div class="frow"><label class="flabel">Confirm Password *</label><input class="finput" type="password" id="r-pass2" placeholder="Repeat password"></div>
       </div>
-      <div id="reg-err" style="display:none;color:var(--red);font-size:12px;background:#fee2e2;padding:8px 10px;border-radius:7px;margin-bottom:10px"></div>
-      <div id="reg-ok" style="display:none;color:#065f46;font-size:12px;background:#d1fae5;padding:8px 10px;border-radius:7px;margin-bottom:10px"></div>
-      <button class="btn-pri" style="width:100%" onclick="doRegister()" id="reg-btn"><i class="ti ti-user-plus"></i> Register &amp; Submit</button>
+      <div id="reg-err" class="info-box info-err"></div>
+      <div id="reg-ok" class="info-box info-ok"></div>
+      <button class="btn-pri" style="width:100%;justify-content:center" onclick="doRegister()" id="reg-btn">
+        <i class="ti ti-user-plus"></i> Register &amp; Submit
+      </button>
     </div>
   </div>
 </div>
 
-<!-- MAIN APP -->
+<!-- =============== MAIN APP =============== -->
 <div id="scr-app" class="screen">
+  <!-- Topbar -->
   <div class="topbar">
-    <div class="topbar-brand">ROY INFOTECH</div>
+    <div class="topbar-brand">
+      <div class="topbar-logo">RI</div>
+      ROY INFOTECH
+    </div>
     <div class="top-actions">
-      <span class="mode-pill" id="mode-lbl">Student Mode</span>
-      <button class="tbtn" onclick="showSec('s-notifications')"><i class="ti ti-bell"></i><span class="notif-badge" id="nb">3</span></button>
-      <button class="tbtn" onclick="doLogout()"><i class="ti ti-logout"></i> Logout</button>
+      <span class="mode-pill" id="mode-lbl">Student</span>
+      <button class="tbtn" onclick="showSec('s-notifications')">
+        <i class="ti ti-bell"></i><span class="nb" id="nb">0</span>
+      </button>
+      <button class="tbtn" onclick="doLogout()"><i class="ti ti-logout"></i></button>
     </div>
   </div>
-  <div class="app-body">
+
+  <div class="app-wrap">
+    <!-- Sidebar / Bottom Nav -->
     <div class="sidebar" id="sidebar">
       <div class="sec-label">Main</div>
-      <div class="nav-item active" id="nav-s-dashboard" onclick="showSec('s-dashboard')"><i class="ti ti-home"></i>Dashboard</div>
-      <div class="nav-item" id="nav-s-attendance" onclick="showSec('s-attendance')"><i class="ti ti-calendar-check"></i>Attendance</div>
-      <div class="nav-item" id="nav-s-reports" onclick="showSec('s-reports')"><i class="ti ti-chart-bar"></i>Reports</div>
-      <div class="nav-item" id="nav-s-profile" onclick="showSec('s-profile')"><i class="ti ti-user"></i>Profile</div>
-      <div class="nav-item" id="nav-s-notifications" onclick="showSec('s-notifications')"><i class="ti ti-bell"></i>Notifications</div>
+      <div class="nav-item active" id="nav-s-dashboard" onclick="showSec('s-dashboard')"><i class="ti ti-home"></i><span>Home</span></div>
+      <div class="nav-item" id="nav-s-attendance" onclick="showSec('s-attendance')"><i class="ti ti-calendar-check"></i><span>Attendance</span></div>
+      <div class="nav-item" id="nav-s-reports" onclick="showSec('s-reports')"><i class="ti ti-chart-bar"></i><span>Reports</span></div>
+      <div class="nav-item" id="nav-s-profile" onclick="showSec('s-profile')"><i class="ti ti-user"></i><span>Profile</span></div>
+      <div class="nav-item" id="nav-s-notifications" onclick="showSec('s-notifications')"><i class="ti ti-bell"></i><span>Alerts</span></div>
       <div id="admin-nav" style="display:none">
-        <div class="sec-label">Admin Panel</div>
-        <div class="nav-item" id="nav-a-dashboard" onclick="showSec('a-dashboard')"><i class="ti ti-layout-dashboard"></i>Overview</div>
-        <div class="nav-item" id="nav-a-students" onclick="showSec('a-students')"><i class="ti ti-users"></i>Students</div>
-        <div class="nav-item" id="nav-a-attendance" onclick="showSec('a-attendance')"><i class="ti ti-calendar-stats"></i>Attendance</div>
-        <div class="nav-item" id="nav-a-fees" onclick="showSec('a-fees')"><i class="ti ti-credit-card"></i>Fees</div>
-        <div class="nav-item" id="nav-a-notify" onclick="showSec('a-notify')"><i class="ti ti-speakerphone"></i>Notify</div>
-        <div class="nav-item" id="nav-a-pending" onclick="showSec('a-pending')"><i class="ti ti-clock"></i>Pending <span id="pending-cnt" class="pill p-amber" style="font-size:9px;padding:1px 5px;margin-left:4px;display:none">0</span></div>
+        <div class="sec-label">Admin</div>
+        <div class="nav-item" id="nav-a-dashboard" onclick="showSec('a-dashboard')"><i class="ti ti-layout-dashboard"></i><span>Overview</span></div>
+        <div class="nav-item" id="nav-a-students" onclick="showSec('a-students')"><i class="ti ti-users"></i><span>Students</span></div>
+        <div class="nav-item" id="nav-a-attendance" onclick="showSec('a-attendance')"><i class="ti ti-calendar-stats"></i><span>Records</span></div>
+        <div class="nav-item" id="nav-a-fees" onclick="showSec('a-fees')"><i class="ti ti-credit-card"></i><span>Fees</span></div>
+        <div class="nav-item" id="nav-a-notify" onclick="showSec('a-notify')"><i class="ti ti-speakerphone"></i><span>Notify</span></div>
+        <div class="nav-item" id="nav-a-pending" onclick="showSec('a-pending')">
+          <i class="ti ti-clock"></i><span>Pending <span id="pending-cnt" class="pill p-amber" style="font-size:9px;padding:1px 5px;display:none">0</span></span>
+        </div>
       </div>
     </div>
+
+    <!-- Main Content -->
     <div class="main" id="main">
 
-      <!-- STUDENT DASHBOARD -->
+      <!-- ===== STUDENT DASHBOARD ===== -->
       <div data-sec="s-dashboard" class="active">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
           <div>
-            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px" id="dash-greet">Good Morning!</div>
-            <div style="font-size:12px;color:var(--muted)" id="dash-sub">Loading...</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px" id="dash-greet">Good Morning!</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px" id="dash-sub">—</div>
           </div>
-          <button class="btn-pri" onclick="markAttendance()" id="att-main-btn" style="font-size:12px;padding:7px 14px"><i class="ti ti-check"></i> Mark Present</button>
+          <button class="btn-pri" id="att-main-btn" onclick="markAttendance()" style="padding:8px 14px;font-size:12px;flex-shrink:0">
+            <i class="ti ti-check"></i> Mark Present
+          </button>
         </div>
         <div id="fee-alert-box" class="fee-alert" style="display:none">
-          <i class="ti ti-alert-circle" style="font-size:20px;color:var(--amber);flex-shrink:0"></i>
-          <div><div style="font-weight:600;font-size:12px;color:#92400e">Fee Reminder</div><div style="font-size:11px;color:#a16207" id="fee-alert-txt"></div></div>
+          <i class="ti ti-alert-circle" style="font-size:22px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
+          <div>
+            <div style="font-weight:700;font-size:12px;color:#92400e">Fee Reminder</div>
+            <div style="font-size:11px;color:#a16207;margin-top:2px" id="fee-alert-txt"></div>
+          </div>
         </div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="d-present">0</div><div class="stat-lbl">Present Days</div></div>
@@ -298,19 +360,26 @@ textarea.finput{resize:vertical}
             <div class="card-title">Attendance Overview</div>
             <div style="display:flex;align-items:center;gap:14px">
               <div class="att-circ">
-                <svg width="90" height="90" viewBox="0 0 90 90">
-                  <circle cx="45" cy="45" r="36" fill="none" stroke="#f1f5f9" stroke-width="9"/>
-                  <circle cx="45" cy="45" r="36" fill="none" stroke="#1a73e8" stroke-width="9" stroke-linecap="round" id="att-ring" stroke-dasharray="0 226"/>
+                <svg width="88" height="88" viewBox="0 0 88 88">
+                  <circle cx="44" cy="44" r="35" fill="none" stroke="#f1f5f9" stroke-width="9"/>
+                  <circle cx="44" cy="44" r="35" fill="none" stroke="#1a73e8" stroke-width="9" stroke-linecap="round" id="att-ring" stroke-dasharray="0 220"/>
                 </svg>
-                <div class="att-circ-txt"><div class="att-pct-big" id="circ-pct">0%</div><div class="att-pct-sub">PRESENT</div></div>
+                <div class="att-circ-txt">
+                  <div class="att-pct-big" id="circ-pct">0%</div>
+                  <div class="att-pct-sub">PRESENT</div>
+                </div>
               </div>
-              <div style="flex:1">
-                <div style="margin-bottom:8px">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--muted)">Present</span><span style="font-weight:600" id="ov-p">0 days</span></div>
+              <div style="flex:1;min-width:0">
+                <div style="margin-bottom:9px">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                    <span style="color:var(--muted)">Present</span><span style="font-weight:600" id="ov-p">0 days</span>
+                  </div>
                   <div class="pbar"><div class="pbar-fill" id="pb1" style="width:0%"></div></div>
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--muted)">Absent</span><span style="font-weight:600;color:var(--red)" id="ov-a">0 days</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                    <span style="color:var(--muted)">Absent</span><span style="font-weight:600;color:var(--red)" id="ov-a">0 days</span>
+                  </div>
                   <div class="pbar"><div class="pbar-fill" id="pb2" style="width:0%;background:linear-gradient(90deg,#ef4444,#f87171)"></div></div>
                 </div>
               </div>
@@ -318,14 +387,14 @@ textarea.finput{resize:vertical}
           </div>
           <div class="card">
             <div class="card-title">My Course</div>
-            <div style="background:#f5f3ff;border-radius:9px;padding:10px;margin-bottom:9px">
-              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--purple)" id="course-name">—</div>
-              <div style="font-size:11px;color:var(--muted)" id="course-desc">—</div>
+            <div style="background:#f5f3ff;border-radius:10px;padding:10px;margin-bottom:10px">
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--purple)" id="course-name">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">ROY INFOTECH Coaching</div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
-              <div><div style="color:var(--muted);margin-bottom:2px">Batch</div><div style="font-weight:600" id="course-slot">—</div></div>
-              <div><div style="color:var(--muted);margin-bottom:2px">Status</div><div><span class="pill p-green">Active</span></div></div>
-              <div><div style="color:var(--muted);margin-bottom:2px">Student ID</div><div style="font-weight:600" id="course-id">—</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:11px">
+              <div><div style="color:var(--muted);margin-bottom:2px">Batch Time</div><div style="font-weight:600" id="course-slot">—</div></div>
+              <div><div style="color:var(--muted);margin-bottom:2px">Status</div><span class="pill p-green">Active</span></div>
+              <div><div style="color:var(--muted);margin-bottom:2px">Student ID</div><div style="font-weight:600;font-size:10px" id="course-id">—</div></div>
               <div><div style="color:var(--muted);margin-bottom:2px">Fee Status</div><div id="fee-status-lbl">—</div></div>
             </div>
           </div>
@@ -336,38 +405,43 @@ textarea.finput{resize:vertical}
         </div>
       </div>
 
-      <!-- STUDENT ATTENDANCE -->
+      <!-- ===== STUDENT ATTENDANCE ===== -->
       <div data-sec="s-attendance">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">My Attendance</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Attendance</div>
         <div class="g2">
           <div class="card">
             <div class="card-title">May 2026</div>
             <div class="cal-grid">
               <div class="cal-hd">S</div><div class="cal-hd">M</div><div class="cal-hd">T</div><div class="cal-hd">W</div><div class="cal-hd">T</div><div class="cal-hd">F</div><div class="cal-hd">S</div>
-              <div class="cal-cell cal-empty"></div><div class="cal-cell cal-empty"></div><div class="cal-cell cal-empty"></div><div class="cal-cell cal-present">1</div><div class="cal-cell cal-present">2</div><div class="cal-cell cal-absent">3</div><div class="cal-cell cal-empty">4</div>
-              <div class="cal-cell cal-empty">5</div><div class="cal-cell cal-present">6</div><div class="cal-cell cal-present">7</div><div class="cal-cell cal-absent">8</div><div class="cal-cell cal-present">9</div><div class="cal-cell cal-present">10</div><div class="cal-cell cal-empty">11</div>
-              <div class="cal-cell cal-empty">12</div><div class="cal-cell cal-today" id="cal-today">13</div><div class="cal-cell cal-empty">14</div><div class="cal-cell cal-empty">15</div><div class="cal-cell cal-empty">16</div><div class="cal-cell cal-empty">17</div><div class="cal-cell cal-empty">18</div>
+              <div class="cal-cell cal-empty">.</div><div class="cal-cell cal-empty">.</div><div class="cal-cell cal-empty">.</div>
+              <div class="cal-cell cal-present">1</div><div class="cal-cell cal-present">2</div><div class="cal-cell cal-absent">3</div><div class="cal-cell cal-empty">.</div>
+              <div class="cal-cell cal-empty">.</div><div class="cal-cell cal-present">6</div><div class="cal-cell cal-present">7</div>
+              <div class="cal-cell cal-absent">8</div><div class="cal-cell cal-present">9</div><div class="cal-cell cal-present">10</div><div class="cal-cell cal-empty">.</div>
+              <div class="cal-cell cal-empty">.</div><div class="cal-cell cal-today" id="cal-today">14</div>
             </div>
-            <div style="display:flex;gap:10px;margin-top:10px;font-size:11px">
-              <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#d1fae5;margin-right:3px"></span>Present</span>
-              <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#fee2e2;margin-right:3px"></span>Absent</span>
-              <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--blue);margin-right:3px"></span>Today</span>
+            <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#d1fae5;display:inline-block"></span>Present</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#fee2e2;display:inline-block"></span>Absent</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue);display:inline-block"></span>Today</span>
             </div>
           </div>
           <div class="card">
             <div class="card-title">Mark Attendance</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap the QR code or button below to mark today's attendance.</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap the QR code or button to mark today's attendance.</div>
             <div class="qr-box" onclick="markQR()" id="qr-wrap">
               <div class="qr-grid" id="qr-grid"></div>
-              <div style="font-size:12px;font-weight:600">Scan / Tap QR Code</div>
-              <div style="font-size:11px;color:var(--muted)" id="qr-date"></div>
+              <div style="font-size:12px;font-weight:600;color:var(--text)">Scan / Tap QR Code</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px" id="qr-date"></div>
             </div>
-            <div id="att-ok" style="display:none;background:#d1fae5;border:1px solid #6ee7b7;border-radius:9px;padding:12px;text-align:center;margin-top:10px">
-              <div style="font-size:18px;margin-bottom:4px">✅</div>
-              <div style="font-weight:600;font-size:13px;color:#065f46">Attendance Marked!</div>
-              <div style="font-size:11px;color:#047857" id="att-marked-info"></div>
+            <div id="att-ok" style="display:none;background:#d1fae5;border:1px solid #6ee7b7;border-radius:10px;padding:13px;text-align:center;margin-top:10px">
+              <div style="font-size:22px;margin-bottom:5px">✅</div>
+              <div style="font-weight:700;font-size:13px;color:#065f46">Attendance Marked!</div>
+              <div style="font-size:11px;color:#047857;margin-top:3px" id="att-marked-info"></div>
             </div>
-            <div style="margin-top:12px;font-size:12px">Today's status: <span id="att-status-pill" class="pill p-amber">Not Marked</span></div>
+            <div style="margin-top:12px;font-size:12px;display:flex;align-items:center;gap:7px">
+              <span style="color:var(--muted)">Today's status:</span>
+              <span id="att-status-pill" class="pill p-amber">Not Marked</span>
+            </div>
           </div>
         </div>
         <div class="card">
@@ -375,7 +449,7 @@ textarea.finput{resize:vertical}
           <div class="tbl-wrap">
             <table>
               <thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Status</th><th>Method</th></tr></thead>
-              <tbody id="att-log-body">
+              <tbody>
                 <tr><td>10 May</td><td>Sat</td><td>10:03 AM</td><td><span class="pill p-green">Present</span></td><td><span class="pill p-blue">QR</span></td></tr>
                 <tr><td>09 May</td><td>Fri</td><td>10:05 AM</td><td><span class="pill p-green">Present</span></td><td><span class="pill p-purple">Manual</span></td></tr>
                 <tr><td>08 May</td><td>Thu</td><td>—</td><td><span class="pill p-red">Absent</span></td><td>—</td></tr>
@@ -386,9 +460,9 @@ textarea.finput{resize:vertical}
         </div>
       </div>
 
-      <!-- STUDENT REPORTS -->
+      <!-- ===== STUDENT REPORTS ===== -->
       <div data-sec="s-reports">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">My Reports</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Reports</div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="r-present">0</div><div class="stat-lbl">This Month</div></div>
           <div class="stat s-green"><div class="stat-num" id="r-pct">0%</div><div class="stat-lbl">Monthly %</div></div>
@@ -396,10 +470,8 @@ textarea.finput{resize:vertical}
           <div class="stat s-amber"><div class="stat-num" id="r-absent">0</div><div class="stat-lbl">Total Absent</div></div>
         </div>
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <div class="card-title" style="margin:0">Monthly Performance</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:9px">
+          <div class="card-title">Monthly Performance</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
             <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>January</span><span style="font-weight:600">95%</span></div><div class="pbar"><div class="pbar-fill" style="width:95%"></div></div></div>
             <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>February</span><span style="font-weight:600">92%</span></div><div class="pbar"><div class="pbar-fill" style="width:92%"></div></div></div>
             <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>March</span><span style="font-weight:600">78%</span></div><div class="pbar"><div class="pbar-fill" style="width:78%"></div></div></div>
@@ -409,121 +481,126 @@ textarea.finput{resize:vertical}
         </div>
       </div>
 
-      <!-- STUDENT PROFILE -->
+      <!-- ===== STUDENT PROFILE ===== -->
       <div data-sec="s-profile">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">My Profile</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Profile</div>
         <div class="card">
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-            <div id="prof-av" style="width:58px;height:58px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff">?</div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+            <div id="prof-av" class="av" style="width:60px;height:60px;border-radius:15px;font-size:22px;background:var(--grad)">?</div>
             <div>
-              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px" id="prof-name">—</div>
-              <div style="font-size:12px;color:var(--muted)" id="prof-id">—</div>
-              <span class="pill p-green">Active</span>
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px" id="prof-name">—</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px" id="prof-id">—</div>
+              <span class="pill p-green" style="margin-top:4px;display:inline-block">Active</span>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:12px" id="prof-details"></div>
         </div>
         <div class="card">
           <div class="card-title">Student ID Card</div>
-          <div style="background:var(--grad);border-radius:12px;padding:14px;color:#fff;max-width:260px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="background:var(--grad);border-radius:13px;padding:16px;color:#fff;max-width:280px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
               <div style="background:rgba(255,255,255,.2);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:10px">RI</div>
-              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px">ROY INFOTECH</div>
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:12px">ROY INFOTECH</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <div id="card-av" style="width:40px;height:40px;border-radius:9px;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px">?</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div id="card-av" class="av" style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.3);font-size:15px">?</div>
               <div>
-                <div style="font-weight:700;font-size:13px" id="card-name">—</div>
-                <div style="font-size:11px;opacity:.8" id="card-course">—</div>
-                <div style="font-size:10px;opacity:.7;margin-top:1px" id="card-id">—</div>
+                <div style="font-weight:700;font-size:14px" id="card-name">—</div>
+                <div style="font-size:11px;opacity:.8;margin-top:2px" id="card-course">—</div>
+                <div style="font-size:10px;opacity:.65;margin-top:2px" id="card-id">—</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- STUDENT NOTIFICATIONS -->
+      <!-- ===== NOTIFICATIONS ===== -->
       <div data-sec="s-notifications">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">Notifications</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Notifications</div>
         <div id="student-notifs-list"></div>
       </div>
 
-      <!-- ADMIN DASHBOARD -->
+      <!-- ===== ADMIN DASHBOARD ===== -->
       <div data-sec="a-dashboard">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px">Admin Overview</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Admin Overview</div>
           <button class="btn-out btn-sm" onclick="loadAdminData()"><i class="ti ti-refresh"></i> Refresh</button>
         </div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="ad-total">0</div><div class="stat-lbl">Total Students</div></div>
-          <div class="stat s-green"><div class="stat-num" id="ad-today">0</div><div class="stat-lbl">Today Present</div></div>
+          <div class="stat s-green"><div class="stat-num" id="ad-today">0</div><div class="stat-lbl">High Attendance</div></div>
           <div class="stat s-amber"><div class="stat-num" id="ad-pending-fee">0</div><div class="stat-lbl">Fee Pending</div></div>
           <div class="stat s-purple"><div class="stat-num" id="ad-new">0</div><div class="stat-lbl">Pending Regs</div></div>
         </div>
         <div class="card">
-          <div class="card-title">Pending Registrations (Firebase)</div>
-          <div id="recent-regs-list"><div style="color:var(--muted);font-size:12px;padding:10px">Loading from Firebase...</div></div>
+          <div class="card-title">Pending Registrations</div>
+          <div id="recent-regs-list"><div style="color:var(--muted);font-size:12px;padding:8px">Loading...</div></div>
         </div>
       </div>
 
-      <!-- ADMIN STUDENTS -->
+      <!-- ===== ADMIN STUDENTS ===== -->
       <div data-sec="a-students">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px">All Students</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">All Students</div>
           <div style="display:flex;gap:7px;flex-wrap:wrap">
-            <input class="finput" id="search-inp" placeholder="Search name/email..." style="width:160px;padding:7px 10px;font-size:12px" oninput="filterStudents()">
-            <select class="fselect" id="filter-course" style="width:110px;padding:7px;font-size:12px" onchange="filterStudents()"><option value="">All Courses</option><option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option><option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option><option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option></select>
+            <input class="finput" id="search-inp" placeholder="Search..." style="width:140px;padding:7px 10px;font-size:12px" oninput="filterStudents()">
+            <select class="fselect" id="filter-course" style="width:105px;padding:7px;font-size:12px" onchange="filterStudents()">
+              <option value="">All Courses</option>
+              <option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option>
+              <option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option>
+              <option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option>
+            </select>
           </div>
         </div>
         <div class="card">
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Student</th><th>Course</th><th>Batch</th><th>Mobile</th><th>Attendance</th><th>Fee</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Batch</th><th class="hide-mob">Mobile</th><th>Att%</th><th>Fee</th><th>Action</th></tr></thead>
               <tbody id="student-tbody"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- ADMIN ATTENDANCE -->
+      <!-- ===== ADMIN ATTENDANCE ===== -->
       <div data-sec="a-attendance">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">Attendance Records</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Attendance Records</div>
         <div class="card">
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Student</th><th>Course</th><th>Slot</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+              <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Slot</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
               <tbody id="admin-att-body"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- ADMIN FEES -->
+      <!-- ===== ADMIN FEES ===== -->
       <div data-sec="a-fees">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">Fee Manager</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Fee Manager</div>
         <div class="g4">
           <div class="stat s-green"><div class="stat-num">₹48K</div><div class="stat-lbl">Collected</div></div>
           <div class="stat s-red"><div class="stat-num" id="fee-pending-amt">₹0</div><div class="stat-lbl">Pending</div></div>
-          <div class="stat s-amber"><div class="stat-num" id="fee-due-count">0</div><div class="stat-lbl">Due This Month</div></div>
+          <div class="stat s-amber"><div class="stat-num" id="fee-due-count">0</div><div class="stat-lbl">Due</div></div>
           <div class="stat s-purple"><div class="stat-num" id="fee-overdue-count">0</div><div class="stat-lbl">Overdue</div></div>
         </div>
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
             <div class="card-title" style="margin:0">Fee Status</div>
-            <button class="btn-pri" style="font-size:11px;padding:6px 12px" onclick="sendAllReminders()"><i class="ti ti-send"></i> Send All Reminders</button>
+            <button class="btn-pri" style="font-size:11px;padding:7px 12px" onclick="sendAllReminders()"><i class="ti ti-send"></i> Send All Reminders</button>
           </div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Student</th><th>Course</th><th>Amount</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>Student</th><th>Course</th><th>Amount</th><th class="hide-mob">Due</th><th>Status</th><th>Action</th></tr></thead>
               <tbody id="fee-tbody"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- ADMIN NOTIFY -->
+      <!-- ===== ADMIN NOTIFY ===== -->
       <div data-sec="a-notify">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px;margin-bottom:14px">Send Notification</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Send Notification</div>
         <div class="card">
           <div class="frow"><label class="flabel">Type</label>
             <select class="fselect" id="n-type"><option>Fee Reminder</option><option>Attendance Alert</option><option>Holiday Notice</option><option>Course Update</option><option>Exam Info</option><option>Custom</option></select>
@@ -532,29 +609,32 @@ textarea.finput{resize:vertical}
             <select class="fselect" id="n-to"><option>All Students</option><option>ADCA Batch</option><option>DCA Batch</option><option>TALLY Batch</option></select>
           </div>
           <div class="frow"><label class="flabel">Title</label><input class="finput" id="n-title" placeholder="Notification title"></div>
-          <div class="frow"><label class="flabel">Message</label><textarea class="finput" id="n-msg" rows="3" placeholder="Type message..."></textarea></div>
+          <div class="frow"><label class="flabel">Message</label><textarea class="finput" id="n-msg" placeholder="Type message..."></textarea></div>
           <button class="btn-pri" onclick="sendNotif()"><i class="ti ti-speakerphone"></i> Send Push Notification</button>
-          <div id="notif-sent" style="display:none;margin-top:10px;background:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;color:#065f46">✅ Notification sent successfully!</div>
+          <div id="notif-sent" class="info-box info-ok" style="margin-top:10px">✅ Notification sent to all students!</div>
         </div>
       </div>
 
-      <!-- ADMIN PENDING APPROVALS -->
+      <!-- ===== ADMIN PENDING ===== -->
       <div data-sec="a-pending">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:17px">Pending Approvals</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Pending Approvals</div>
           <button class="btn-out btn-sm" onclick="renderPendingList()"><i class="ti ti-refresh"></i> Refresh</button>
         </div>
         <div id="pending-list"></div>
-        <div id="no-pending" style="display:none;text-align:center;padding:30px;color:var(--muted);font-size:13px"><i class="ti ti-checks" style="font-size:32px;display:block;margin-bottom:8px;color:#d1fae5"></i>No pending registrations</div>
+        <div id="no-pending" style="display:none;text-align:center;padding:40px;color:var(--muted)">
+          <i class="ti ti-checks" style="font-size:40px;display:block;margin-bottom:8px;color:#a7f3d0"></i>
+          No pending registrations
+        </div>
       </div>
 
-    </div>
-  </div>
-</div>
+    </div><!-- /main -->
+  </div><!-- /app-wrap -->
+</div><!-- /scr-app -->
 
 <!-- STUDENT DETAIL MODAL -->
 <div id="student-modal" style="display:none">
-  <div class="overlay">
+  <div class="modal-wrap" onclick="if(event.target===this)closeModal()">
     <div class="modal">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">Student Details</div>
@@ -565,20 +645,12 @@ textarea.finput{resize:vertical}
   </div>
 </div>
 
-<!-- FIREBASE SDK (CDN, ES Module) -->
+<!-- ===================== FIREBASE SDK ===================== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  serverTimestamp
+  getFirestore, collection, addDoc, getDocs, doc,
+  updateDoc, deleteDoc, query, where, serverTimestamp, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -593,68 +665,111 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Expose to global scope for use in non-module scripts
-window._fb = {
-  db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp
-};
+window._fb = { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, setDoc };
 window._fbReady = true;
 document.dispatchEvent(new Event('fbReady'));
 </script>
 
+<!-- ===================== APP LOGIC ===================== -->
 <script>
-// ====================== APP STATE ======================
+// ============================================================
+// STATE
+// ============================================================
+var ADMIN_CREDS = { email: 'admin@royinfotech.in', password: 'admin123' };
+
+// Demo students (always available, always approved)
 var DB = {
   students: [
-    {id:'RI-2026-0001',name:'Priya Sharma',father:'Suresh Sharma',mobile:'9812345678',email:'priya@gmail.com',dob:'2005-03-12',gender:'Female',course:'DCA',slot:'11:00 AM',address:'456 Park Road, Gaya, Bihar',password:'priya123',present:24,absent:1,feeStatus:'Paid',feeAmt:1000,approved:true},
-    {id:'RI-2026-0002',name:'Arjun Mishra',father:'Vinod Mishra',mobile:'9823456789',email:'arjun@gmail.com',dob:'2004-07-20',gender:'Male',course:'TALLY',slot:'02:00 PM',address:'789 MG Road, Gaya, Bihar',password:'arjun123',present:18,absent:7,feeStatus:'Overdue',feeAmt:800,approved:true},
-    {id:'RI-2026-0003',name:'Sunita Gupta',father:'Mohan Gupta',mobile:'9834567890',email:'sunita@gmail.com',dob:'2006-01-05',gender:'Female',course:'ADCA+',slot:'09:00 AM',address:'12 Station Rd, Gaya, Bihar',password:'sunita123',present:23,absent:2,feeStatus:'Paid',feeAmt:1500,approved:true}
+    { id:'RI-2026-0001', name:'Priya Sharma',  father:'Suresh Sharma', mobile:'9812345678', email:'priya@gmail.com',   dob:'2005-03-12', gender:'Female', course:'DCA',   slot:'11:00 AM', address:'456 Park Road, Gaya', password:'priya123',  present:24, absent:1, feeStatus:'Paid',    feeAmt:1000, approved:true },
+    { id:'RI-2026-0002', name:'Arjun Mishra',  father:'Vinod Mishra',  mobile:'9823456789', email:'arjun@gmail.com',   dob:'2004-07-20', gender:'Male',   course:'TALLY', slot:'02:00 PM', address:'789 MG Road, Gaya',  password:'arjun123',  present:18, absent:7, feeStatus:'Overdue', feeAmt:800,  approved:true },
+    { id:'RI-2026-0003', name:'Sunita Gupta',  father:'Mohan Gupta',   mobile:'9834567890', email:'sunita@gmail.com',  dob:'2006-01-05', gender:'Female', course:'ADCA+', slot:'09:00 AM', address:'12 Station Rd, Gaya', password:'sunita123', present:23, absent:2, feeStatus:'Paid',    feeAmt:1500, approved:true }
   ],
+  pendingRegs: [],
   notifications: [
-    {type:'amber',icon:'ti-alert-circle',title:'Fee Reminder',msg:'Monthly fee due on 15th May 2026',time:'Today'},
-    {type:'blue',icon:'ti-info-circle',title:'Holiday Notice',msg:'Institute closed on 20th May (Exam day)',time:'Yesterday'},
-    {type:'green',icon:'ti-certificate',title:'Course Update',msg:'Tally Advanced batch starts June 1st',time:'2 days ago'}
-  ],
-  pendingRegs: [] // loaded from Firebase
+    { type:'amber', icon:'ti-alert-circle', title:'Fee Reminder',  msg:'Monthly fee due on 15th May 2026',      time:'Today' },
+    { type:'blue',  icon:'ti-info-circle',  title:'Holiday Notice', msg:'Institute closed on 20th May (Exams)', time:'Yesterday' },
+    { type:'green', icon:'ti-certificate',  title:'Course Update',  msg:'Tally Advanced batch starts June 1st', time:'2 days ago' }
+  ]
 };
 
-var ADMIN = {email:'admin@royinfotech.in', password:'admin123'};
-var currentUser = null;
-var isAdmin = false;
+var currentUser   = null;
+var isAdmin       = false;
 var attMarkedToday = false;
-var loginMode = 'student';
-var idCounter = 4;
-var fbReady = false;
+var loginMode     = 'student';
+var idCounter     = 4;
+var fbLoaded      = false;
 
-// Wait for Firebase
-document.addEventListener('fbReady', function() {
-  fbReady = true;
+// ============================================================
+// FIREBASE READY
+// ============================================================
+document.addEventListener('fbReady', function () {
+  fbLoaded = true;
+  // Pre-load approved students from Firebase into DB.students
+  loadApprovedFromFirebase();
 });
 
-// ====================== HELPERS ======================
+function loadApprovedFromFirebase() {
+  if (!window._fb) return;
+  var fb = window._fb;
+  fb.getDocs(fb.collection(fb.db, 'approvedStudents'))
+    .then(function (snap) {
+      snap.forEach(function (d) {
+        var data = d.data();
+        data.fbDocId = d.id;
+        // Avoid duplicates with demo students
+        if (!DB.students.find(s => s.email.toLowerCase() === data.email.toLowerCase())) {
+          data.approved = true;
+          DB.students.push(data);
+        }
+      });
+    })
+    .catch(function (e) { console.warn('approvedStudents load failed:', e); });
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
 function showLoading(txt) {
-  document.getElementById('loading-overlay').style.display = 'flex';
+  var el = document.getElementById('loading-overlay');
+  el.style.display = 'flex';
   document.getElementById('loading-text').textContent = txt || 'Loading...';
 }
-function hideLoading() {
-  document.getElementById('loading-overlay').style.display = 'none';
-}
+function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
 
-function initials(name) { return name ? name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : '??'; }
+function initials(name) { return name ? name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : '??'; }
+
 function avatarColor(i) {
-  var c=['linear-gradient(135deg,#1a73e8,#4f98f0)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#6c47ff,#a78bfa)','linear-gradient(135deg,#ef4444,#f87171)'];
+  var c = [
+    'linear-gradient(135deg,#1a73e8,#4f98f0)',
+    'linear-gradient(135deg,#10b981,#34d399)',
+    'linear-gradient(135deg,#f59e0b,#fbbf24)',
+    'linear-gradient(135deg,#6c47ff,#a78bfa)',
+    'linear-gradient(135deg,#ef4444,#f87171)'
+  ];
   return c[i % c.length];
 }
-function pct(s) { var t=s.present+s.absent; return t ? Math.round(s.present/t*100) : 0; }
-function feeColor(f) { return f==='Paid'?'p-green':f==='Overdue'?'p-red':'p-amber'; }
+
+function pct(s) { var t = s.present + s.absent; return t ? Math.round(s.present / t * 100) : 0; }
+
+function feeColor(f) { return f === 'Paid' ? 'p-green' : f === 'Overdue' ? 'p-red' : 'p-amber'; }
+
 function courseColor(c) {
-  var m={ADCA:'p-purple','ADCA+':'p-purple',DCA:'p-blue',TALLY:'p-amber',DTP:'p-blue',HTML:'p-green',CSS:'p-green',JS:'p-amber',MIS:'p-blue',CYBERCAFE:'p-gray',TYPING:'p-gray',OTHER:'p-gray'};
-  return m[c]||'p-gray';
+  var m = { ADCA:'p-purple','ADCA+':'p-purple', DCA:'p-blue', TALLY:'p-amber', DTP:'p-blue',
+            HTML:'p-green', CSS:'p-green', JS:'p-amber', MIS:'p-blue', CYBERCAFE:'p-gray', TYPING:'p-gray', OTHER:'p-gray' };
+  return m[c] || 'p-gray';
 }
-function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
-function genId() { return 'RI-2026-' + String(idCounter).padStart(4,'0'); }
+
+function showErr(elId, msg) { var el = document.getElementById(elId); el.textContent = msg; el.style.display = 'block'; }
+function hideEl(elId) { document.getElementById(elId).style.display = 'none'; }
+
+function greeting() { var h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
+
+function todayStr() {
+  return new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+}
 
 function setScreen(id) {
-  ['scr-splash','scr-login','scr-reg','scr-app'].forEach(s => {
+  ['scr-login','scr-reg','scr-app'].forEach(s => {
     document.getElementById(s).classList.remove('show');
   });
   document.getElementById(id).classList.add('show');
@@ -664,141 +779,213 @@ function initQR() {
   var g = document.getElementById('qr-grid');
   if (!g) return;
   var pat = [1,1,1,0,1,1,1,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0];
-  g.innerHTML = pat.map(b => '<div class="qr-px" style="background:'+(b?'#1a1f36':'#fff')+'"></div>').join('');
-  var d = new Date();
-  var el = document.getElementById('qr-date');
-  if (el) el.textContent = d.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
-}
-
-// ====================== AUTH ======================
-function setLTab(m) {
-  loginMode = m;
-  document.querySelectorAll('#ltabs .tab').forEach((t,i) => t.classList.toggle('active', (m==='student'&&i===0)||(m==='admin'&&i===1)));
-}
-function goReg() { setScreen('scr-reg'); }
-function goLogin() { setScreen('scr-login'); }
-function doLogout() { currentUser=null; isAdmin=false; attMarkedToday=false; setScreen('scr-login'); }
-
-function doLogin() {
-  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
-  var pass = (document.getElementById('li-pass').value || '').trim();
-  var err = document.getElementById('login-err');
-  err.style.display = 'none';
-  if (!email || !pass) { showErr(err, 'Please enter email and password.'); return; }
-
-  if (loginMode === 'admin') {
-    if (email === ADMIN.email.toLowerCase() && pass === ADMIN.password) {
-      isAdmin = true; currentUser = {name:'Admin', email:ADMIN.email};
-      launchApp();
-    } else { showErr(err, 'Invalid admin credentials.'); }
-    return;
-  }
-
-  // Student login — check local DB first, then Firebase pending
-  var found = DB.students.find(s => s.email.toLowerCase() === email && s.password === pass);
-  if (!found) {
-    var pend = DB.pendingRegs.find(s => s.email.toLowerCase() === email && s.password === pass);
-    if (pend) { showErr(err, 'Your registration is pending admin approval.'); return; }
-    showErr(err, 'Email or password incorrect. Please register first.');
-    return;
-  }
-  if (!found.approved) { showErr(err, 'Your account is pending admin approval.'); return; }
-  isAdmin = false; currentUser = found;
-  launchApp();
-}
-
-// ====================== REGISTER (FIREBASE) ======================
-function doRegister() {
-  var name = document.getElementById('r-name').value.trim();
-  var father = document.getElementById('r-father').value.trim();
-  var mobile = document.getElementById('r-mobile').value.trim();
-  var email = document.getElementById('r-email').value.trim().toLowerCase();
-  var dob = document.getElementById('r-dob').value;
-  var gender = document.getElementById('r-gender').value;
-  var course = document.getElementById('r-course').value;
-  var slot = document.getElementById('r-slot').value;
-  var addr = document.getElementById('r-addr').value.trim();
-  var pass = document.getElementById('r-pass').value;
-  var pass2 = document.getElementById('r-pass2').value;
-  var err = document.getElementById('reg-err');
-  var ok = document.getElementById('reg-ok');
-  err.style.display = 'none'; ok.style.display = 'none';
-
-  if (!name || !email || !mobile || !course || !slot || !pass) { showErr(err, 'Please fill all required (*) fields.'); return; }
-  if (mobile.length !== 10 || isNaN(mobile)) { showErr(err, 'Please enter a valid 10-digit mobile number.'); return; }
-  if (pass !== pass2) { showErr(err, 'Passwords do not match.'); return; }
-  if (pass.length < 6) { showErr(err, 'Password must be at least 6 characters.'); return; }
-  if (DB.students.find(s => s.email.toLowerCase() === email) || DB.pendingRegs.find(s => s.email.toLowerCase() === email)) {
-    showErr(err, 'This email is already registered.'); return;
-  }
-
-  var newId = genId();
-  idCounter++;
-  var student = {
-    id: newId, name, father, mobile, email, dob, gender, course, slot,
-    address: addr, password: pass, present: 0, absent: 0,
-    feeStatus: 'Pending',
-    feeAmt: (course==='ADCA'||course==='ADCA+')?1200:(course==='DCA'?1000:800),
-    approved: false,
-    regDate: new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})
-  };
-
-  var btn = document.getElementById('reg-btn');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
-
-  // Save to Firebase Firestore
-  if (window._fb) {
-    var fb = window._fb;
-    fb.addDoc(fb.collection(fb.db, 'pendingRegs'), student)
-      .then(function(docRef) {
-        student.fbDocId = docRef.id;
-        DB.pendingRegs.push(student);
-        updatePendingBadge();
-        ok.textContent = '✅ Registration submitted! Your ID: ' + newId + '. Awaiting admin approval.';
-        ok.style.display = 'block';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="ti ti-user-plus"></i> Register & Submit';
-        // Clear form
-        ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('r-gender').value = '';
-        document.getElementById('r-course').value = '';
-        document.getElementById('r-slot').value = '';
-      })
-      .catch(function(error) {
-        // Fallback: save locally if Firebase fails
-        DB.pendingRegs.push(student);
-        updatePendingBadge();
-        ok.textContent = '⚠️ Saved locally (Firebase error: ' + error.message + '). ID: ' + newId;
-        ok.style.display = 'block';
-        btn.disabled = false;
-        btn.innerHTML = '<i class="ti ti-user-plus"></i> Register & Submit';
-      });
-  } else {
-    // Firebase not ready, save locally
-    DB.pendingRegs.push(student);
-    updatePendingBadge();
-    ok.textContent = '✅ Registration submitted! ID: ' + newId + '. Awaiting approval.';
-    ok.style.display = 'block';
-    btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-user-plus"></i> Register & Submit';
-  }
+  g.innerHTML = pat.map(b => '<div class="qr-px" style="background:' + (b ? '#1a1f36' : '#fff') + '"></div>').join('');
+  var qd = document.getElementById('qr-date');
+  if (qd) qd.textContent = todayStr();
 }
 
 function updatePendingBadge() {
   var n = DB.pendingRegs.length;
   var el = document.getElementById('pending-cnt');
-  el.textContent = n;
-  el.style.display = n > 0 ? '' : 'none';
+  if (el) { el.textContent = n; el.style.display = n > 0 ? '' : 'none'; }
   var nb = document.getElementById('nb');
   if (nb) nb.textContent = n + DB.notifications.length;
 }
 
-// ====================== LAUNCH APP ======================
+// ============================================================
+// AUTH
+// ============================================================
+function setLTab(m) {
+  loginMode = m;
+  document.querySelectorAll('#ltabs .tab').forEach((t, i) => {
+    t.classList.toggle('active', (m === 'student' && i === 0) || (m === 'admin' && i === 1));
+  });
+}
+
+function goReg()   { setScreen('scr-reg'); }
+function goLogin() { setScreen('scr-login'); }
+function doLogout() { currentUser = null; isAdmin = false; attMarkedToday = false; setScreen('scr-login'); }
+
+// KEY FIX: Login now also searches Firebase-loaded approved students
+function doLogin() {
+  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
+  var pass  = (document.getElementById('li-pass').value  || '').trim();
+  hideEl('login-err');
+
+  if (!email || !pass) { showErr('login-err', 'Please enter email and password.'); return; }
+
+  if (loginMode === 'admin') {
+    if (email === ADMIN_CREDS.email.toLowerCase() && pass === ADMIN_CREDS.password) {
+      isAdmin = true;
+      currentUser = { name: 'Admin', email: ADMIN_CREDS.email };
+      launchApp();
+    } else {
+      showErr('login-err', 'Invalid admin credentials.');
+    }
+    return;
+  }
+
+  // Student login
+  // DB.students now includes Firebase-approved students (loaded on fbReady)
+  var found = DB.students.find(s => s.email.toLowerCase() === email && s.password === pass && s.approved);
+
+  if (found) {
+    isAdmin = false;
+    currentUser = found;
+    launchApp();
+    return;
+  }
+
+  // Check if pending
+  var pending = DB.pendingRegs.find(s => s.email.toLowerCase() === email && s.password === pass);
+  if (pending) {
+    showErr('login-err', 'Your registration is pending admin approval. Please wait.');
+    return;
+  }
+
+  // Maybe Firebase hasn't loaded yet — try fetching approved directly
+  if (window._fb) {
+    showLoading('Verifying credentials...');
+    var fb = window._fb;
+    fb.getDocs(fb.collection(fb.db, 'approvedStudents'))
+      .then(function (snap) {
+        hideLoading();
+        var found2 = null;
+        snap.forEach(function (d) {
+          var data = d.data();
+          if (data.email && data.email.toLowerCase() === email && data.password === pass && data.approved) {
+            found2 = data;
+          }
+        });
+        if (found2) {
+          // Add to local cache and login
+          if (!DB.students.find(s => s.email.toLowerCase() === email)) {
+            DB.students.push(found2);
+          }
+          isAdmin = false;
+          currentUser = found2;
+          launchApp();
+        } else {
+          // Also check pendingRegs collection
+          fb.getDocs(fb.collection(fb.db, 'pendingRegs'))
+            .then(function (snap2) {
+              var isPending = false;
+              snap2.forEach(function (d) {
+                var data = d.data();
+                if (data.email && data.email.toLowerCase() === email) isPending = true;
+              });
+              if (isPending) {
+                showErr('login-err', 'Your registration is pending admin approval.');
+              } else {
+                showErr('login-err', 'Email or password incorrect. Please register first.');
+              }
+            })
+            .catch(function () {
+              showErr('login-err', 'Email or password incorrect. Please register first.');
+            });
+        }
+      })
+      .catch(function (e) {
+        hideLoading();
+        showErr('login-err', 'Login failed. Check your internet connection.');
+      });
+  } else {
+    showErr('login-err', 'Email or password incorrect. Please register first.');
+  }
+}
+
+// ============================================================
+// REGISTER
+// ============================================================
+function doRegister() {
+  var name   = document.getElementById('r-name').value.trim();
+  var father = document.getElementById('r-father').value.trim();
+  var mobile = document.getElementById('r-mobile').value.trim();
+  var email  = document.getElementById('r-email').value.trim().toLowerCase();
+  var dob    = document.getElementById('r-dob').value;
+  var gender = document.getElementById('r-gender').value;
+  var course = document.getElementById('r-course').value;
+  var slot   = document.getElementById('r-slot').value;
+  var addr   = document.getElementById('r-addr').value.trim();
+  var pass   = document.getElementById('r-pass').value;
+  var pass2  = document.getElementById('r-pass2').value;
+
+  hideEl('reg-err'); hideEl('reg-ok');
+
+  if (!name || !father || !mobile || !email || !course || !slot || !pass) {
+    showErr('reg-err', 'Please fill all required (*) fields.'); return;
+  }
+  if (!/^\d{10}$/.test(mobile)) { showErr('reg-err', 'Enter a valid 10-digit mobile number.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('reg-err', 'Enter a valid email address.'); return; }
+  if (pass.length < 6) { showErr('reg-err', 'Password must be at least 6 characters.'); return; }
+  if (pass !== pass2)  { showErr('reg-err', 'Passwords do not match.'); return; }
+
+  var emailExists = DB.students.find(s => s.email.toLowerCase() === email)
+                 || DB.pendingRegs.find(s => s.email.toLowerCase() === email);
+  if (emailExists) { showErr('reg-err', 'This email is already registered.'); return; }
+
+  var newId = 'RI-2026-' + String(idCounter).padStart(4, '0');
+  idCounter++;
+
+  var student = {
+    id: newId, name, father, mobile, email, dob, gender, course, slot,
+    address: addr, password: pass,
+    present: 0, absent: 0,
+    feeStatus: 'Pending',
+    feeAmt: (course === 'ADCA' || course === 'ADCA+') ? 1200 : course === 'DCA' ? 1000 : 800,
+    approved: false,
+    regDate: todayStr()
+  };
+
+  var btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader"></i> Submitting...';
+
+  function onSuccess(docId) {
+    if (docId) student.fbDocId = docId;
+    DB.pendingRegs.push(student);
+    updatePendingBadge();
+    var ok = document.getElementById('reg-ok');
+    ok.innerHTML = '✅ Registration submitted!<br><b>Your ID: ' + newId + '</b><br>Awaiting admin approval. You can login after approval.';
+    ok.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-user-plus"></i> Register &amp; Submit';
+    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('r-gender').value = '';
+    document.getElementById('r-course').value = '';
+    document.getElementById('r-slot').value   = '';
+  }
+
+  if (window._fb) {
+    var fb = window._fb;
+    fb.addDoc(fb.collection(fb.db, 'pendingRegs'), student)
+      .then(function (docRef) { onSuccess(docRef.id); })
+      .catch(function (err) {
+        console.warn('Firebase save error:', err);
+        onSuccess(null); // save locally anyway
+      });
+  } else {
+    onSuccess(null);
+  }
+}
+
+// ============================================================
+// LAUNCH APP
+// ============================================================
 function launchApp() {
   setScreen('scr-app');
-  document.getElementById('mode-lbl').textContent = isAdmin ? 'Admin Mode' : 'Student Mode';
+  document.getElementById('mode-lbl').textContent = isAdmin ? 'Admin' : 'Student';
   document.getElementById('admin-nav').style.display = isAdmin ? 'block' : 'none';
+
+  // Hide student-only nav items when admin
+  ['nav-s-dashboard','nav-s-attendance','nav-s-reports','nav-s-profile','nav-s-notifications'].forEach(id => {
+    var el = document.getElementById(id);
+    if (el) el.style.display = isAdmin ? 'none' : '';
+  });
+
+  initQR();
+  updatePendingBadge();
+
   if (isAdmin) {
     loadAdminData();
     showSec('a-dashboard');
@@ -806,301 +993,339 @@ function launchApp() {
     loadStudentData();
     showSec('s-dashboard');
   }
-  initQR();
 }
 
-// ====================== STUDENT UI ======================
+// ============================================================
+// STUDENT UI
+// ============================================================
 function loadStudentData() {
   var s = currentUser;
-  var p = s.present, ab = s.absent, total = p + ab, pc = total ? Math.round(p/total*100) : 0;
-  document.getElementById('dash-greet').textContent = 'Good ' + greeting() + ', ' + s.name.split(' ')[0] + '!';
-  document.getElementById('dash-sub').textContent = s.course + ' • ' + s.slot + ' Batch';
-  document.getElementById('d-present').textContent = p;
-  document.getElementById('d-absent').textContent = ab;
-  document.getElementById('d-pct').textContent = pc + '%';
-  document.getElementById('d-total').textContent = total;
-  document.getElementById('circ-pct').textContent = pc + '%';
-  document.getElementById('att-ring').setAttribute('stroke-dasharray', Math.round(pc/100*226) + ' 226');
-  document.getElementById('ov-p').textContent = p + ' days';
-  document.getElementById('ov-a').textContent = ab + ' days';
+  if (!s) return;
+  var p = s.present, ab = s.absent, total = p + ab, pc = total ? Math.round(p / total * 100) : 0;
+
+  setText('dash-greet',  'Good ' + greeting() + ', ' + s.name.split(' ')[0] + '! 👋');
+  setText('dash-sub',    s.course + ' • ' + s.slot + ' Batch');
+  setText('d-present',   p);
+  setText('d-absent',    ab);
+  setText('d-pct',       pc + '%');
+  setText('d-total',     total);
+  setText('circ-pct',    pc + '%');
+  document.getElementById('att-ring').setAttribute('stroke-dasharray', Math.round(pc / 100 * 220) + ' 220');
+  setText('ov-p', p + ' days');
+  setText('ov-a', ab + ' days');
   document.getElementById('pb1').style.width = pc + '%';
-  document.getElementById('pb2').style.width = (100-pc) + '%';
-  document.getElementById('course-name').textContent = s.course;
-  document.getElementById('course-desc').textContent = 'Course at ROY INFOTECH';
-  document.getElementById('course-slot').textContent = s.slot;
-  document.getElementById('course-id').textContent = s.id;
+  document.getElementById('pb2').style.width = (100 - pc) + '%';
+
+  setText('course-name', s.course);
+  setText('course-slot', s.slot);
+  setText('course-id',   s.id);
   document.getElementById('fee-status-lbl').innerHTML = '<span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span>';
+
   if (s.feeStatus !== 'Paid') {
     document.getElementById('fee-alert-box').style.display = 'flex';
-    document.getElementById('fee-alert-txt').textContent = 'Monthly fee of ₹' + s.feeAmt + ' is due. Please pay to avoid suspension.';
+    setText('fee-alert-txt', 'Monthly fee of ₹' + s.feeAmt + ' is due. Please pay to avoid suspension.');
+  } else {
+    document.getElementById('fee-alert-box').style.display = 'none';
   }
+
   var initl = initials(s.name);
-  document.getElementById('prof-av').textContent = initl;
-  document.getElementById('card-av').textContent = initl;
-  document.getElementById('prof-name').textContent = s.name;
-  document.getElementById('prof-id').textContent = 'Student ID: ' + s.id;
-  document.getElementById('card-name').textContent = s.name;
-  document.getElementById('card-course').textContent = s.course + ' • ' + s.slot;
-  document.getElementById('card-id').textContent = 'ID: ' + s.id;
+  setText('prof-av',   initl);
+  setText('card-av',   initl);
+  setText('prof-name', s.name);
+  setText('prof-id',   'Student ID: ' + s.id);
+  setText('card-name', s.name);
+  setText('card-course', s.course + ' • ' + s.slot);
+  setText('card-id',   'ID: ' + s.id);
+
   document.getElementById('prof-details').innerHTML = [
-    ['Father Name', s.father], ['Mobile', s.mobile],
-    ['Email', s.email], ['Date of Birth', s.dob || '—'],
-    ['Course', s.course], ['Batch Slot', s.slot],
-    ['Address', (s.address || '—')]
-  ].map((f,i) => '<div' + (i===6?' style="grid-column:span 2"':'') + '><div style="color:var(--muted);margin-bottom:2px;font-size:11px">'+f[0]+'</div><div style="font-weight:600;font-size:12px">'+f[1]+'</div></div>').join('');
-  document.getElementById('r-present').textContent = p;
-  document.getElementById('r-pct').textContent = pc + '%';
-  document.getElementById('r-total').textContent = p;
-  document.getElementById('r-absent').textContent = ab;
-  document.getElementById('r-may-pct').textContent = pc + '%';
+    ['Father Name', s.father],       ['Mobile', s.mobile],
+    ['Email',       s.email],        ['Date of Birth', s.dob || '—'],
+    ['Course',      s.course],       ['Batch Slot', s.slot],
+    ['Address',     s.address || '—', true]
+  ].map(f =>
+    '<div' + (f[2] ? ' style="grid-column:span 2"' : '') + '>' +
+    '<div style="color:var(--muted);font-size:10px;margin-bottom:2px">' + f[0] + '</div>' +
+    '<div style="font-weight:600;font-size:12px">' + f[1] + '</div></div>'
+  ).join('');
+
+  // Reports
+  setText('r-present', p);
+  setText('r-pct',     pc + '%');
+  setText('r-total',   p);
+  setText('r-absent',  ab);
+  setText('r-may-pct', pc + '%');
   document.getElementById('r-may-bar').style.width = pc + '%';
-  var notifHTML = DB.notifications.map(n => notifCard(n)).join('');
-  document.getElementById('dash-notifs').innerHTML = notifHTML || '<div style="color:var(--muted);font-size:12px;padding:10px">No notifications</div>';
-  document.getElementById('student-notifs-list').innerHTML = notifHTML || '<div style="color:var(--muted);font-size:12px;padding:10px">No notifications</div>';
+
+  // Notifications
+  var html = DB.notifications.map(notifCard).join('');
+  var fallback = '<div style="color:var(--muted);font-size:12px;padding:10px">No notifications</div>';
+  setText2('dash-notifs',          html || fallback);
+  setText2('student-notifs-list',  html || fallback);
 }
 
 function notifCard(n) {
-  var bgMap = {amber:'#fef3c7', blue:'#dbeafe', green:'#d1fae5', red:'#fee2e2'};
-  var colorMap = {amber:'var(--amber)', blue:'var(--blue)', green:'var(--green)', red:'var(--red)'};
-  return '<div class="notif-item"><div class="notif-ico" style="background:'+(bgMap[n.type]||'#f3f4f6')+';color:'+(colorMap[n.type]||'var(--muted)')+'"><i class="ti '+n.icon+'"></i></div><div><div style="font-size:12px;font-weight:600">'+n.title+'</div><div style="font-size:11px;color:var(--muted)">'+n.msg+'</div></div><div style="margin-left:auto;font-size:10px;color:var(--muted);white-space:nowrap">'+n.time+'</div></div>';
+  var bg = { amber:'#fef3c7', blue:'#dbeafe', green:'#d1fae5', red:'#fee2e2' };
+  var fg = { amber:'var(--amber)', blue:'var(--blue)', green:'var(--green)', red:'var(--red)' };
+  return '<div class="notif-item">' +
+    '<div class="notif-ico" style="background:' + (bg[n.type] || '#f3f4f6') + ';color:' + (fg[n.type] || 'var(--muted)') + '">' +
+    '<i class="ti ' + n.icon + '"></i></div>' +
+    '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">' + n.title + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + n.msg + '</div></div>' +
+    '<div style="font-size:10px;color:var(--muted);white-space:nowrap;margin-left:8px">' + n.time + '</div></div>';
 }
 
-function greeting() {
-  var h = new Date().getHours();
-  return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
-}
+function setText(id, val)  { var el = document.getElementById(id); if (el) el.textContent = val; }
+function setText2(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
 
-// ====================== ADMIN UI ======================
+// ============================================================
+// ADMIN UI
+// ============================================================
 function loadAdminData() {
-  // Load from Firebase pendingRegs
-  loadPendingFromFirebase().then(function() {
+  // Load pending from Firebase, then also load approved students (to catch newly approved ones)
+  var promises = [loadPendingFromFirebase(), loadApprovedFromFirebasePromise()];
+  Promise.all(promises).then(function () {
     renderAdminStats();
     renderStudentTable(DB.students);
     renderFeeTable(DB.students);
     renderAdminAtt(DB.students);
-    renderPendingList();
     renderRecentRegs();
   });
 }
 
 function loadPendingFromFirebase() {
   if (!window._fb) return Promise.resolve();
-  showLoading('Loading registrations from Firebase...');
+  showLoading('Loading pending registrations...');
   var fb = window._fb;
   return fb.getDocs(fb.collection(fb.db, 'pendingRegs'))
-    .then(function(snapshot) {
+    .then(function (snap) {
       DB.pendingRegs = [];
-      snapshot.forEach(function(doc) {
-        var data = doc.data();
-        data.fbDocId = doc.id;
-        // Don't add if already approved (in main students list)
-        if (!DB.students.find(s => s.email === data.email)) {
+      snap.forEach(function (d) {
+        var data = d.data();
+        data.fbDocId = d.id;
+        if (!DB.students.find(s => s.email && data.email && s.email.toLowerCase() === data.email.toLowerCase())) {
           DB.pendingRegs.push(data);
         }
       });
       updatePendingBadge();
       hideLoading();
     })
-    .catch(function(err) {
-      hideLoading();
-      console.warn('Firebase load error:', err);
-    });
+    .catch(function (e) { hideLoading(); console.warn(e); });
+}
+
+function loadApprovedFromFirebasePromise() {
+  if (!window._fb) return Promise.resolve();
+  var fb = window._fb;
+  return fb.getDocs(fb.collection(fb.db, 'approvedStudents'))
+    .then(function (snap) {
+      snap.forEach(function (d) {
+        var data = d.data();
+        data.fbDocId = d.id;
+        data.approved = true;
+        if (!DB.students.find(s => s.email && data.email && s.email.toLowerCase() === data.email.toLowerCase())) {
+          DB.students.push(data);
+        }
+      });
+    })
+    .catch(function (e) { console.warn('approvedStudents load error:', e); });
 }
 
 function renderAdminStats() {
-  document.getElementById('ad-total').textContent = DB.students.length;
-  document.getElementById('ad-today').textContent = DB.students.filter(s => pct(s) > 80).length;
-  document.getElementById('ad-pending-fee').textContent = DB.students.filter(s => s.feeStatus !== 'Paid').length;
-  document.getElementById('ad-new').textContent = DB.pendingRegs.length;
+  setText('ad-total',       DB.students.length);
+  setText('ad-today',       DB.students.filter(s => pct(s) >= 80).length);
+  setText('ad-pending-fee', DB.students.filter(s => s.feeStatus !== 'Paid').length);
+  setText('ad-new',         DB.pendingRegs.length);
 }
 
 function renderRecentRegs() {
   var list = DB.pendingRegs.slice().reverse().slice(0, 5);
   var html = list.map(s =>
-    '<div style="display:flex;align-items:center;gap:10px;padding:9px;background:#fffbeb;border:1px solid #fde68a;border-radius:9px;margin-bottom:7px">' +
-    '<div class="av" style="background:var(--grad)">'+initials(s.name)+'</div>' +
-    '<div><div style="font-size:12px;font-weight:600">'+s.name+'</div>' +
-    '<div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div>' +
-    '<div style="font-size:10px;color:var(--blue)">'+s.email+'</div></div>' +
-    '<span class="pill p-amber" style="margin-left:auto">Pending</span>' +
-    '<button class="btn-out btn-sm" onclick="approveStudent(\''+s.email+'\')">Approve</button></div>'
+    '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:7px;flex-wrap:wrap">' +
+    '<div class="av" style="width:36px;height:36px;font-size:13px;background:var(--grad)">' + initials(s.name) + '</div>' +
+    '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">' + s.name + '</div>' +
+    '<div style="font-size:11px;color:var(--muted)">' + s.course + ' • ' + s.slot + '</div>' +
+    '<div style="font-size:10px;color:var(--blue)">' + s.email + '</div></div>' +
+    '<div style="display:flex;gap:6px;flex-shrink:0">' +
+    '<button class="btn-pri" style="font-size:10px;padding:5px 10px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\'' + s.email + '\')">' +
+    '<i class="ti ti-check"></i> Approve</button>' +
+    '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\'' + s.email + '\')">' +
+    '<i class="ti ti-x"></i> Reject</button></div></div>'
   ).join('');
-  document.getElementById('recent-regs-list').innerHTML = html || '<div style="color:var(--muted);font-size:12px;padding:10px">No pending registrations</div>';
+  setText2('recent-regs-list', html || '<div style="color:var(--muted);font-size:12px;padding:8px">No pending registrations</div>');
 }
 
 function renderStudentTable(list) {
   var html = list.map((s, i) =>
-    '<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="background:'+avatarColor(i)+'">'+initials(s.name)+'</div>' +
-    '<div><div style="font-size:12px;font-weight:600">'+s.name+'</div><div style="font-size:10px;color:var(--muted)">'+s.id+'</div></div></div></td>' +
-    '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>' +
-    '<td style="font-size:12px">'+s.slot+'</td>' +
-    '<td style="font-size:12px">'+s.mobile+'</td>' +
-    '<td style="font-size:12px;font-weight:600;color:'+(pct(s)>=80?'var(--green)':pct(s)>=60?'var(--amber)':'var(--red)')+'">'+pct(s)+'%</td>' +
-    '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>' +
-    '<td><button class="btn-out btn-sm" onclick="viewStudent(\''+s.id+'\')">View</button></td></tr>'
+    '<tr>' +
+    '<td><div style="display:flex;align-items:center;gap:8px">' +
+    '<div class="av" style="width:28px;height:28px;font-size:10px;background:' + avatarColor(i) + '">' + initials(s.name) + '</div>' +
+    '<div><div style="font-size:12px;font-weight:600">' + s.name + '</div><div style="font-size:10px;color:var(--muted)">' + s.id + '</div></div></div></td>' +
+    '<td><span class="pill ' + courseColor(s.course) + '">' + s.course + '</span></td>' +
+    '<td class="hide-mob" style="font-size:12px">' + s.slot + '</td>' +
+    '<td class="hide-mob" style="font-size:12px">' + s.mobile + '</td>' +
+    '<td style="font-size:12px;font-weight:700;color:' + (pct(s) >= 80 ? 'var(--green)' : pct(s) >= 60 ? 'var(--amber)' : 'var(--red)') + '">' + pct(s) + '%</td>' +
+    '<td><span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span></td>' +
+    '<td><button class="btn-out btn-sm" onclick="viewStudent(\'' + s.id + '\')">View</button></td></tr>'
   ).join('');
-  document.getElementById('student-tbody').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No students found</td></tr>';
+  setText2('student-tbody', html || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No students found</td></tr>');
 }
 
 function filterStudents() {
   var q = (document.getElementById('search-inp').value || '').toLowerCase();
   var c = document.getElementById('filter-course').value;
-  var list = DB.students.filter(s => {
-    var m = !q || (s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.id.toLowerCase().includes(q));
-    return m && (!c || s.course === c);
-  });
+  var list = DB.students.filter(s =>
+    (!q || s.name.toLowerCase().includes(q) || (s.email && s.email.toLowerCase().includes(q)) || s.id.toLowerCase().includes(q)) &&
+    (!c || s.course === c)
+  );
   renderStudentTable(list);
 }
 
 function renderFeeTable(list) {
   var html = list.map(s =>
-    '<tr><td style="font-size:12px">'+s.name+'</td>' +
-    '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>' +
-    '<td style="font-size:12px">₹'+s.feeAmt+'</td>' +
-    '<td style="font-size:12px">15 May</td>' +
-    '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>' +
-    '<td>'+(s.feeStatus!=='Paid'?'<button class="btn-out btn-sm" onclick="sendRemind(\''+s.name+'\')">Remind</button>':'<span style="font-size:11px;color:var(--green)">✓ Done</span>')+'</td></tr>'
+    '<tr>' +
+    '<td style="font-size:12px;font-weight:600">' + s.name + '</td>' +
+    '<td><span class="pill ' + courseColor(s.course) + '">' + s.course + '</span></td>' +
+    '<td style="font-size:12px">₹' + s.feeAmt + '</td>' +
+    '<td class="hide-mob" style="font-size:12px">15 May</td>' +
+    '<td><span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span></td>' +
+    '<td>' + (s.feeStatus !== 'Paid' ?
+      '<button class="btn-out btn-sm" onclick="sendRemind(\'' + s.name + '\')">Remind</button>' :
+      '<span style="font-size:11px;color:var(--green)">✓ Done</span>') + '</td></tr>'
   ).join('');
-  document.getElementById('fee-tbody').innerHTML = html;
-  document.getElementById('fee-pending-amt').textContent = '₹' + list.filter(s=>s.feeStatus!=='Paid').reduce((a,s)=>a+s.feeAmt,0);
-  document.getElementById('fee-due-count').textContent = list.filter(s=>s.feeStatus==='Pending').length;
-  document.getElementById('fee-overdue-count').textContent = list.filter(s=>s.feeStatus==='Overdue').length;
+  setText2('fee-tbody', html);
+  setText('fee-pending-amt', '₹' + list.filter(s => s.feeStatus !== 'Paid').reduce((a, s) => a + (s.feeAmt || 0), 0));
+  setText('fee-due-count',   list.filter(s => s.feeStatus === 'Pending').length);
+  setText('fee-overdue-count', list.filter(s => s.feeStatus === 'Overdue').length);
 }
 
 function renderAdminAtt(list) {
-  var today = new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+  var today = todayStr();
   var html = list.map(s =>
-    '<tr><td style="font-size:12px">'+s.name+'</td>' +
-    '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>' +
-    '<td style="font-size:12px">'+s.slot+'</td>' +
-    '<td style="font-size:12px">'+today+'</td>' +
-    '<td style="font-size:12px">'+(s.present>22?'10:02 AM':'—')+'</td>' +
-    '<td><span class="pill '+(s.present>22?'p-green':'p-red')+'">'+(s.present>22?'Present':'Absent')+'</span></td></tr>'
+    '<tr>' +
+    '<td style="font-size:12px;font-weight:600">' + s.name + '</td>' +
+    '<td><span class="pill ' + courseColor(s.course) + '">' + s.course + '</span></td>' +
+    '<td class="hide-mob" style="font-size:12px">' + s.slot + '</td>' +
+    '<td style="font-size:12px">' + today + '</td>' +
+    '<td style="font-size:12px">' + (pct(s) >= 80 ? s.slot.split(' ')[0] + ' AM' : '—') + '</td>' +
+    '<td><span class="pill ' + (pct(s) >= 80 ? 'p-green' : 'p-red') + '">' + (pct(s) >= 80 ? 'Present' : 'Absent') + '</span></td></tr>'
   ).join('');
-  document.getElementById('admin-att-body').innerHTML = html;
+  setText2('admin-att-body', html);
 }
 
 function renderPendingList() {
-  if (!window._fb) {
-    _renderPendingListUI();
-    return;
-  }
-  showLoading('Fetching registrations...');
-  var fb = window._fb;
-  fb.getDocs(fb.collection(fb.db, 'pendingRegs'))
-    .then(function(snapshot) {
-      DB.pendingRegs = [];
-      snapshot.forEach(function(d) {
-        var data = d.data();
-        data.fbDocId = d.id;
-        if (!DB.students.find(s => s.email === data.email)) {
-          DB.pendingRegs.push(data);
-        }
-      });
-      updatePendingBadge();
-      hideLoading();
-      _renderPendingListUI();
-    })
-    .catch(function(err) {
-      hideLoading();
-      _renderPendingListUI();
-    });
+  loadPendingFromFirebase().then(function () { _renderPendingUI(); });
 }
 
-function _renderPendingListUI() {
+function _renderPendingUI() {
   var list = DB.pendingRegs;
-  document.getElementById('no-pending').style.display = list.length === 0 ? 'block' : 'none';
-  document.getElementById('pending-list').innerHTML = list.map(s =>
+  document.getElementById('no-pending').style.display    = list.length === 0 ? 'block' : 'none';
+  setText2('pending-list', list.map(s =>
     '<div class="card" style="margin-bottom:10px">' +
-    '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">' +
     '<div style="display:flex;align-items:center;gap:10px">' +
-    '<div class="av" style="background:var(--grad)">'+initials(s.name)+'</div>' +
-    '<div><div style="font-size:13px;font-weight:600">'+s.name+'</div>' +
-    '<div style="font-size:11px;color:var(--muted)">'+s.email+' • '+s.mobile+'</div>' +
-    '<div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div>' +
-    '<div style="font-size:10px;color:var(--blue)">ID: '+s.id+' | Reg: '+(s.regDate||'—')+'</div></div></div>' +
-    '<div style="display:flex;gap:7px">' +
-    '<button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')">' +
+    '<div class="av" style="width:40px;height:40px;font-size:14px;border-radius:12px;background:var(--grad)">' + initials(s.name) + '</div>' +
+    '<div><div style="font-size:13px;font-weight:700">' + s.name + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + s.email + ' • ' + s.mobile + '</div>' +
+    '<div style="font-size:11px;color:var(--muted)">' + s.course + ' • ' + s.slot + '</div>' +
+    '<div style="font-size:10px;color:var(--blue);margin-top:2px">ID: ' + s.id + ' | Registered: ' + (s.regDate || '—') + '</div></div></div>' +
+    '<div style="display:flex;gap:7px;flex-shrink:0">' +
+    '<button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\'' + s.email + '\')">' +
     '<i class="ti ti-check"></i> Approve</button>' +
-    '<button class="btn-out btn-sm" style="border-color:var(--red);color:var(--red)" onclick="rejectStudent(\''+s.email+'\')">' +
+    '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\'' + s.email + '\')">' +
     '<i class="ti ti-x"></i> Reject</button></div></div></div>'
-  ).join('');
+  ).join(''));
 }
 
+// ============================================================
+// APPROVE / REJECT
+// ============================================================
 function approveStudent(email) {
   var idx = DB.pendingRegs.findIndex(s => s.email === email);
   if (idx === -1) return;
-  var s = DB.pendingRegs[idx];
+  var s = Object.assign({}, DB.pendingRegs[idx]);
   var fbDocId = s.fbDocId;
   s.approved = true;
+
   DB.students.push(s);
   DB.pendingRegs.splice(idx, 1);
 
-  // Remove from Firebase pendingRegs collection
   if (window._fb && fbDocId) {
     var fb = window._fb;
-    fb.deleteDoc(fb.doc(fb.db, 'pendingRegs', fbDocId)).catch(function(e) { console.warn('Firebase delete error:', e); });
-    // Also save to approvedStudents collection
-    fb.addDoc(fb.collection(fb.db, 'approvedStudents'), s).catch(function(e) { console.warn(e); });
+    // Move from pendingRegs → approvedStudents in Firebase
+    fb.addDoc(fb.collection(fb.db, 'approvedStudents'), s)
+      .then(function () {
+        fb.deleteDoc(fb.doc(fb.db, 'pendingRegs', fbDocId)).catch(console.warn);
+      })
+      .catch(console.warn);
   }
 
   loadAdminData();
-  alert('✅ Student "' + s.name + '" approved!\nThey can now login with:\nEmail: ' + s.email);
+  alert('✅ Student "' + s.name + '" approved!\n\nThey can now login with:\nEmail: ' + s.email + '\nPassword: (their registered password)');
 }
 
 function rejectStudent(email) {
-  if (!confirm('Reject registration for ' + email + '?')) return;
+  var s = DB.pendingRegs.find(s => s.email === email);
+  if (!s) return;
+  if (!confirm('Reject registration for ' + s.name + ' (' + email + ')?')) return;
+
   var idx = DB.pendingRegs.findIndex(s => s.email === email);
-  if (idx > -1) {
-    var s = DB.pendingRegs[idx];
-    // Remove from Firebase
-    if (window._fb && s.fbDocId) {
-      var fb = window._fb;
-      fb.deleteDoc(fb.doc(fb.db, 'pendingRegs', s.fbDocId)).catch(function(e) { console.warn(e); });
-    }
-    DB.pendingRegs.splice(idx, 1);
-    loadAdminData();
-    alert('Registration for "' + s.name + '" has been rejected.');
+  if (window._fb && s.fbDocId) {
+    window._fb.deleteDoc(window._fb.doc(window._fb.db, 'pendingRegs', s.fbDocId)).catch(console.warn);
   }
+  DB.pendingRegs.splice(idx, 1);
+  loadAdminData();
+  alert('Registration for "' + s.name + '" has been rejected and removed.');
 }
 
+// ============================================================
+// STUDENT DETAIL MODAL
+// ============================================================
 function viewStudent(id) {
   var s = DB.students.find(s => s.id === id);
   if (!s) return;
   var pc = pct(s);
-  document.getElementById('modal-content').innerHTML =
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">' +
-    '<div class="av" style="width:46px;height:46px;font-size:15px;border-radius:12px;background:var(--grad)">'+initials(s.name)+'</div>' +
-    '<div><div style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:14px">'+s.name+'</div>' +
-    '<div style="font-size:11px;color:var(--muted)">'+s.id+' • '+s.course+' • '+s.slot+'</div></div></div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:12px">' +
-    '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">'+s.mobile+'</div></div>' +
-    '<div><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;font-size:11px">'+s.email+'</div></div>' +
-    '<div><div style="color:var(--muted);font-size:10px">Attendance</div><div style="font-weight:600;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'% ('+s.present+'P / '+s.absent+'A)</div></div>' +
-    '<div><div style="color:var(--muted);font-size:10px">Fee</div><div><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></div></div>' +
-    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Address</div><div style="font-weight:600">'+s.address+'</div></div>' +
-    '</div><div style="display:flex;gap:7px">' +
-    '<button class="btn-pri" style="font-size:11px;padding:6px 12px" onclick="sendRemind(\''+s.name+'\')"><i class="ti ti-send"></i> Send Reminder</button>' +
-    '<button class="btn-out btn-sm" onclick="closeModal()">Close</button></div>';
+  setText2('modal-content',
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+    '<div class="av" style="width:48px;height:48px;font-size:16px;border-radius:13px;background:var(--grad)">' + initials(s.name) + '</div>' +
+    '<div><div style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:15px">' + s.name + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + s.id + ' • ' + s.course + ' • ' + s.slot + '</div></div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:12px;margin-bottom:14px">' +
+    '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">' + (s.mobile || '—') + '</div></div>' +
+    '<div><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;font-size:11px;word-break:break-all">' + s.email + '</div></div>' +
+    '<div><div style="color:var(--muted);font-size:10px">Attendance</div>' +
+    '<div style="font-weight:700;color:' + (pc >= 80 ? 'var(--green)' : pc >= 60 ? 'var(--amber)' : 'var(--red)') + '">' + pc + '% (' + s.present + ' Present / ' + s.absent + ' Absent)</div></div>' +
+    '<div><div style="color:var(--muted);font-size:10px">Fee Status</div><div><span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span></div></div>' +
+    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Father Name</div><div style="font-weight:600">' + (s.father || '—') + '</div></div>' +
+    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Address</div><div style="font-weight:600">' + (s.address || '—') + '</div></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\'' + s.name + '\')"><i class="ti ti-send"></i> Send Reminder</button>' +
+    '<button class="btn-out btn-sm" onclick="closeModal()"><i class="ti ti-x"></i> Close</button></div>'
+  );
   document.getElementById('student-modal').style.display = 'block';
 }
 function closeModal() { document.getElementById('student-modal').style.display = 'none'; }
 
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
 function sendRemind(name) { alert('Fee reminder sent to ' + name + '!'); }
-function sendAllReminders() { alert('Fee reminders sent to all pending/overdue students!'); }
+function sendAllReminders() { alert('Fee reminders sent to all students with pending/overdue fees!'); }
 
 function sendNotif() {
-  var t = document.getElementById('n-title').value.trim();
-  var m = document.getElementById('n-msg').value.trim();
-  if (!t || !m) { alert('Please fill title and message.'); return; }
-  DB.notifications.unshift({type:'blue', icon:'ti-speakerphone', title:t, msg:m, time:'Just now'});
-  document.getElementById('notif-sent').style.display = 'block';
-  setTimeout(() => document.getElementById('notif-sent').style.display = 'none', 3000);
+  var t = (document.getElementById('n-title').value || '').trim();
+  var m = (document.getElementById('n-msg').value   || '').trim();
+  if (!t || !m) { alert('Please fill both title and message.'); return; }
+  DB.notifications.unshift({ type:'blue', icon:'ti-speakerphone', title:t, msg:m, time:'Just now' });
+  var sent = document.getElementById('notif-sent');
+  sent.style.display = 'block';
+  setTimeout(function () { sent.style.display = 'none'; }, 3000);
   document.getElementById('n-title').value = '';
-  document.getElementById('n-msg').value = '';
+  document.getElementById('n-msg').value   = '';
 }
 
-// ====================== ATTENDANCE ======================
+// ============================================================
+// ATTENDANCE
+// ============================================================
 function markAttendance() {
   if (attMarkedToday) { alert('Attendance already marked for today!'); return; }
   doMarkAtt();
@@ -1111,23 +1336,25 @@ function markQR() {
 }
 function doMarkAtt() {
   attMarkedToday = true;
-  currentUser.present++;
+  if (currentUser) currentUser.present++;
   var now = new Date();
-  var t = now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-  var dateStr = now.toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'});
+  var timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
   document.getElementById('att-ok').style.display = 'block';
-  document.getElementById('att-marked-info').textContent = dateStr + ' • ' + t;
+  setText('att-marked-info', todayStr() + ' • ' + timeStr);
   document.getElementById('att-status-pill').className = 'pill p-green';
-  document.getElementById('att-status-pill').textContent = 'Present ✓';
+  setText('att-status-pill', 'Present ✓');
   var btn = document.getElementById('att-main-btn');
   btn.innerHTML = '<i class="ti ti-check"></i> Marked ✓';
   btn.style.opacity = '0.6';
   btn.disabled = true;
-  document.getElementById('cal-today').className = 'cal-cell cal-present';
+  var cal = document.getElementById('cal-today');
+  if (cal) cal.className = 'cal-cell cal-present';
   loadStudentData();
 }
 
-// ====================== SECTION NAVIGATION ======================
+// ============================================================
+// NAVIGATION
+// ============================================================
 function showSec(id) {
   document.querySelectorAll('[data-sec]').forEach(s => s.classList.remove('active'));
   var el = document.querySelector('[data-sec="' + id + '"]');
@@ -1135,18 +1362,13 @@ function showSec(id) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   var nav = document.getElementById('nav-' + id);
   if (nav) nav.classList.add('active');
-  // Refresh data when switching to certain sections
-  if (id === 'a-pending') renderPendingList();
-  if (id === 'a-students') filterStudents();
-  if (id === 'a-fees') renderFeeTable(DB.students);
-  if (id === 'a-dashboard') loadAdminData();
-}
 
-// ====================== INIT ======================
-setTimeout(function() {
-  setScreen('scr-login');
-  initQR();
-}, 2500);
+  if (id === 'a-pending')    renderPendingList();
+  if (id === 'a-students')   filterStudents();
+  if (id === 'a-fees')       renderFeeTable(DB.students);
+  if (id === 'a-attendance') renderAdminAtt(DB.students);
+  if (id === 'a-dashboard')  loadAdminData();
+}
 </script>
 </body>
 </html>
