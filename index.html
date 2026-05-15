@@ -8,24 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --blue:#1a73e8;--purple:#6c47ff;--purple-l:#ede9ff;
-  --bg:#f0f4ff;--card:#fff;--text:#1a1f36;--muted:#6b7280;--border:#e5e7eb;
-  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
-  --grad:linear-gradient(135deg,#1a73e8,#6c47ff);
-}
+:root{--blue:#1a73e8;--purple:#6c47ff;--purple-l:#ede9ff;--bg:#f0f4ff;--card:#fff;--text:#1a1f36;--muted:#6b7280;--border:#e5e7eb;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--grad:linear-gradient(135deg,#1a73e8,#6c47ff)}
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
-
-/* ---- SCREEN SYSTEM ---- */
-.screen{display:none}
-.screen.show{display:flex;flex-direction:column;min-height:100vh}
-
-/* ---- LOADING ---- */
-#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;align-items:center;justify-content:center;z-index:9999;gap:10px;font-size:13px;font-weight:600;color:var(--blue)}
-.spin{width:20px;height:20px;border:2.5px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ---- TOPBAR ---- */
+.screen{display:none}.screen.show{display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:var(--grad);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;flex-shrink:0;position:sticky;top:0;z-index:100}
 .topbar-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
 .topbar-logo{width:30px;height:30px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
@@ -34,325 +19,209 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .tbtn:hover{background:rgba(255,255,255,.3)}
 .mode-pill{font-size:10px;background:rgba(255,255,255,.18);padding:3px 9px;border-radius:20px}
 .nb{background:#ef4444;color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;margin-left:2px}
-
-/* ---- LAYOUT ---- */
 .app-wrap{display:flex;flex:1;overflow:hidden;height:calc(100vh - 54px)}
-.sidebar{width:190px;background:#fff;border-right:1px solid var(--border);padding:10px 0;overflow-y:auto;flex-shrink:0;transition:transform .25s}
+.sidebar{width:190px;background:#fff;border-right:1px solid var(--border);padding:10px 0;overflow-y:auto;flex-shrink:0}
 .sec-label{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1.2px;padding:10px 16px 4px;text-transform:uppercase}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--muted);border-left:3px solid transparent;transition:all .15s;font-weight:500;white-space:nowrap}
-.nav-item:hover{background:#f5f7ff;color:var(--blue)}
-.nav-item.active{background:#ede9ff;color:var(--purple);border-left-color:var(--purple)}
+.nav-item:hover{background:#f5f7ff;color:var(--blue)}.nav-item.active{background:#ede9ff;color:var(--purple);border-left-color:var(--purple)}
 .nav-item i{font-size:16px;flex-shrink:0}
 .main{flex:1;overflow-y:auto;padding:16px}
-
-/* ---- CARDS ---- */
 .card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:16px;margin-bottom:12px}
 .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:12px;color:var(--text)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
-
-/* ---- STAT CARDS ---- */
 .stat{border-radius:12px;padding:13px;color:#fff;display:flex;flex-direction:column;gap:3px}
 .stat-num{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
 .stat-lbl{font-size:10px;opacity:.85;font-weight:500}
-.s-blue{background:linear-gradient(135deg,#1a73e8,#4f98f0)}
-.s-red{background:linear-gradient(135deg,#ef4444,#f87171)}
-.s-green{background:linear-gradient(135deg,#10b981,#34d399)}
-.s-amber{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+.s-blue{background:linear-gradient(135deg,#1a73e8,#4f98f0)}.s-red{background:linear-gradient(135deg,#ef4444,#f87171)}
+.s-green{background:linear-gradient(135deg,#10b981,#34d399)}.s-amber{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
 .s-purple{background:linear-gradient(135deg,#6c47ff,#a78bfa)}
-
-/* ---- TABLE ---- */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{padding:7px 9px;background:#f8fafc;color:var(--muted);font-weight:600;font-size:10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:8px 9px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#fafbff}
-
-/* ---- PILLS ---- */
+tr:last-child td{border-bottom:none}tr:hover td{background:#fafbff}
 .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
-.p-green{background:#d1fae5;color:#065f46}
-.p-red{background:#fee2e2;color:#991b1b}
-.p-blue{background:#dbeafe;color:#1e40af}
-.p-amber{background:#fef3c7;color:#92400e}
-.p-purple{background:#ede9ff;color:#5b21b6}
-.p-gray{background:#f3f4f6;color:#4b5563}
-
-/* ---- AVATAR ---- */
+.p-green{background:#d1fae5;color:#065f46}.p-red{background:#fee2e2;color:#991b1b}
+.p-blue{background:#dbeafe;color:#1e40af}.p-amber{background:#fef3c7;color:#92400e}
+.p-purple{background:#ede9ff;color:#5b21b6}.p-gray{background:#f3f4f6;color:#4b5563}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
-
-/* ---- FORM ---- */
 .frow{margin-bottom:10px}
 .flabel{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px}
 .finput,.fselect{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;transition:border-color .2s;-webkit-appearance:none}
 .finput:focus,.fselect:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
 textarea.finput{resize:vertical;min-height:80px}
 .btn-pri{background:var(--grad);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:6px}
-.btn-pri:hover{opacity:.9}
-.btn-pri:disabled{opacity:.55;cursor:not-allowed}
+.btn-pri:hover{opacity:.9}.btn-pri:disabled{opacity:.55;cursor:not-allowed}
 .btn-out{background:transparent;color:var(--purple);border:1.5px solid var(--purple);border-radius:8px;padding:6px 13px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
-.btn-out:hover{background:var(--purple-l)}
-.btn-sm{padding:4px 9px;font-size:10px;border-radius:6px}
-.btn-danger{border-color:var(--red);color:var(--red)}
-.btn-danger:hover{background:#fee2e2}
-
-/* ---- TABS ---- */
+.btn-out:hover{background:var(--purple-l)}.btn-sm{padding:4px 9px;font-size:10px;border-radius:6px}
+.btn-danger{border-color:var(--red);color:var(--red)}.btn-danger:hover{background:#fee2e2}
 .tabs{display:flex;gap:3px;background:#f1f5f9;border-radius:9px;padding:3px;margin-bottom:14px}
 .tab{flex:1;text-align:center;padding:7px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s}
 .tab.active{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.1)}
-
-/* ---- ATTENDANCE CIRCLE ---- */
 .att-circ{position:relative;width:88px;height:88px;flex-shrink:0}
 .att-circ svg{transform:rotate(-90deg)}
 .att-circ-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .att-pct-big{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--blue);line-height:1}
 .att-pct-sub{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.5px}
-
-/* ---- PROGRESS BAR ---- */
 .pbar{background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden;margin-top:3px}
 .pbar-fill{height:100%;border-radius:99px;background:var(--grad);transition:width .7s ease}
-
-/* ---- NOTIFICATION ITEM ---- */
 .notif-item{display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:10px;background:#f8fafc;border:1px solid var(--border);margin-bottom:7px}
 .notif-ico{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-
-/* ---- CALENDAR ---- */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:7px}
 .cal-hd{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:3px 0}
 .cal-cell{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500}
-.cal-present{background:#d1fae5;color:#065f46}
-.cal-absent{background:#fee2e2;color:#991b1b}
-.cal-today{background:var(--blue);color:#fff;font-weight:700}
-.cal-empty{color:transparent}
-
-/* ---- FEE ALERT ---- */
+.cal-present{background:#d1fae5;color:#065f46}.cal-absent{background:#fee2e2;color:#991b1b}
+.cal-today{background:var(--blue);color:#fff;font-weight:700}.cal-today-present{background:var(--green);color:#fff;font-weight:700}
+.cal-future{background:#f8fafc;color:#cbd5e1}.cal-empty{color:transparent}
 .fee-alert{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-
-/* ---- LOGIN SCREENS ---- */
 .auth-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
 .auth-card{background:#fff;border-radius:20px;border:1px solid var(--border);padding:28px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(26,115,232,.08)}
 .auth-logo{background:var(--grad);border-radius:13px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:#fff;margin-bottom:14px}
-
-/* ---- REGISTER SCREEN ---- */
 .reg-wrap{flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:20px;background:var(--bg)}
 .reg-card{background:#fff;border-radius:18px;border:1px solid var(--border);padding:22px;width:100%;max-width:480px;box-shadow:0 4px 24px rgba(26,115,232,.08)}
-
-/* ---- QR BOX ---- */
 .qr-box{border:2px dashed var(--border);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:all .2s}
 .qr-box:hover{border-color:var(--blue);background:#f0f7ff}
 .qr-grid{width:96px;height:96px;margin:0 auto 10px;background:#fff;padding:5px;border-radius:6px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .qr-px{border-radius:1px}
-
-/* ---- MODAL ---- */
 .modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
-.modal{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:360px;max-height:90vh;overflow-y:auto}
-
-/* ---- INFO / ERROR BOXES ---- */
+.modal{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
 .info-box{border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:10px;display:none}
 .info-err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
 .info-ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
-.info-warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;display:flex;gap:8px;align-items:flex-start}
-
-/* ---- SECTIONS ---- */
-[data-sec]{display:none}
-[data-sec].active{display:block}
-
-/* ---- SCROLLBAR ---- */
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
-
-/* ---- MOBILE ---- */
+.att-banner{border-radius:10px;padding:11px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.banner-ok{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.banner-warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.88);display:none;align-items:center;justify-content:center;z-index:9999;gap:10px;font-size:13px;font-weight:600;color:var(--blue)}
+.spin{width:20px;height:20px;border:2.5px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+[data-sec]{display:none}[data-sec].active{display:block}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
 @media(max-width:640px){
-  .sidebar{
-    position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:56px;
-    border-right:none;border-top:1px solid var(--border);
-    display:flex;flex-direction:row;padding:0;z-index:200;overflow-x:auto;overflow-y:hidden;
-  }
+  .sidebar{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:56px;border-right:none;border-top:1px solid var(--border);display:flex;flex-direction:row;padding:0;z-index:200;overflow-x:auto;overflow-y:hidden;background:#fff}
   .sec-label{display:none}
-  .nav-item{
-    flex-direction:column;gap:2px;padding:6px 12px;border-left:none;
-    border-top:3px solid transparent;font-size:9px;min-width:56px;
-    justify-content:center;align-items:center;
-  }
+  .nav-item{flex-direction:column;gap:2px;padding:6px 10px;border-left:none;border-top:3px solid transparent;font-size:9px;min-width:54px;justify-content:center;align-items:center}
   .nav-item.active{border-left:none;border-top-color:var(--purple);background:#f5f3ff}
   .nav-item i{font-size:18px}
   #admin-nav{display:contents !important}
   .app-wrap{flex-direction:column}
   .main{height:calc(100vh - 54px - 56px);padding:12px;overflow-y:auto}
-  .g4{grid-template-columns:1fr 1fr}
-  .g2{grid-template-columns:1fr}
-  .modal{max-width:100%}
-  table{font-size:11px}
-  th,td{padding:6px 7px}
-  .hide-mob{display:none}
+  .g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+  .modal{max-width:100%}.hide-mob{display:none}
 }
-@media(min-width:641px){
-  .app-wrap{height:calc(100vh - 54px)}
-}
+@media(min-width:641px){.app-wrap{height:calc(100vh - 54px)}}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);align-items:center;justify-content:center;z-index:9999;gap:10px;font-size:13px;font-weight:600;color:var(--blue);display:none">
-  <div class="spin"></div>
-  <span id="loading-text">Loading...</span>
-</div>
+<div id="loading-overlay"><div class="spin"></div><span id="loading-text">Loading...</span></div>
 
-<!-- =============== LOGIN =============== -->
+<!-- ============ LOGIN ============ -->
 <div id="scr-login" class="screen show">
-  <div class="auth-wrap">
-    <div class="auth-card">
-      <div class="auth-logo">RI</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:2px">Welcome Back</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">ROY INFOTECH Attendance System</div>
-      <div class="tabs" id="ltabs">
-        <div class="tab active" onclick="setLTab('student')">🎓 Student</div>
-        <div class="tab" onclick="setLTab('admin')">⚙️ Admin</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);background:#f8fafc;border-radius:8px;padding:9px 11px;margin-bottom:12px;line-height:1.7;border:1px solid var(--border)" id="login-hint">
-        <b>Admin:</b> <code style="background:#eee;padding:1px 5px;border-radius:4px">admin@royinfotech.in</code> / <code style="background:#eee;padding:1px 5px;border-radius:4px">admin123</code><br>
-        <b>Student:</b> Registered email + password
-      </div>
-      <div class="frow">
-        <label class="flabel">Email / Mobile</label>
-        <input class="finput" id="li-email" placeholder="Enter email or mobile" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <div class="frow">
-        <label class="flabel">Password</label>
-        <input class="finput" type="password" id="li-pass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <div id="login-err" class="info-box info-err"></div>
-      <div style="text-align:right;font-size:11px;color:var(--blue);cursor:pointer;margin-bottom:14px" onclick="alert('Contact admin: admin@royinfotech.in')">Forgot password?</div>
-      <button class="btn-pri" style="width:100%;justify-content:center;margin-bottom:10px" id="login-btn" onclick="doLogin()">
-        <i class="ti ti-login"></i> Sign In
-      </button>
-      <div style="text-align:center;font-size:12px;color:var(--muted)">
-        New student? <span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="goReg()">Register here</span>
-      </div>
+  <div class="auth-wrap"><div class="auth-card">
+    <div class="auth-logo">RI</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:2px">Welcome Back</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">ROY INFOTECH Attendance System</div>
+    <div class="tabs" id="ltabs">
+      <div class="tab active" onclick="setLTab('student')">🎓 Student</div>
+      <div class="tab" onclick="setLTab('admin')">⚙️ Admin</div>
     </div>
-  </div>
+    <div style="font-size:11px;color:var(--muted);background:#f8fafc;border-radius:8px;padding:9px 11px;margin-bottom:12px;line-height:1.8;border:1px solid var(--border)">
+      <b>Admin:</b> <code style="background:#eee;padding:1px 5px;border-radius:4px">admin@royinfotech.in</code> / <code style="background:#eee;padding:1px 5px;border-radius:4px">admin123</code><br>
+      <b>Student:</b> Apna registered email + password
+    </div>
+    <div class="frow"><label class="flabel">Email / Mobile</label><input class="finput" id="li-email" placeholder="Enter email" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="frow"><label class="flabel">Password</label><input class="finput" type="password" id="li-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div id="login-err" class="info-box info-err"></div>
+    <div style="text-align:right;font-size:11px;color:var(--blue);cursor:pointer;margin-bottom:14px">Forgot password?</div>
+    <button class="btn-pri" style="width:100%;justify-content:center;margin-bottom:10px" onclick="doLogin()"><i class="ti ti-login"></i> Sign In</button>
+    <div style="text-align:center;font-size:12px;color:var(--muted)">New student? <span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="goReg()">Register here</span></div>
+  </div></div>
 </div>
 
-<!-- =============== REGISTER =============== -->
+<!-- ============ REGISTER ============ -->
 <div id="scr-reg" class="screen">
-  <div class="reg-wrap">
-    <div class="reg-card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-        <div style="background:var(--grad);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;flex-shrink:0">RI</div>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px">Student Registration</div>
-          <div style="font-size:11px;color:var(--muted)">ROY INFOTECH Coaching</div>
-        </div>
-        <button class="btn-out btn-sm" style="margin-left:auto" onclick="goLogin()"><i class="ti ti-arrow-left"></i> Back</button>
-      </div>
-      <div class="g2">
-        <div class="frow"><label class="flabel">Full Name *</label><input class="finput" id="r-name" placeholder="Ravi Kumar"></div>
-        <div class="frow"><label class="flabel">Father Name *</label><input class="finput" id="r-father" placeholder="Ramesh Kumar"></div>
-        <div class="frow"><label class="flabel">Mobile *</label><input class="finput" id="r-mobile" placeholder="9876543210" maxlength="10" inputmode="numeric"></div>
-        <div class="frow"><label class="flabel">Email *</label><input class="finput" id="r-email" placeholder="ravi@email.com" type="email"></div>
-        <div class="frow"><label class="flabel">Date of Birth</label><input class="finput" type="date" id="r-dob"></div>
-        <div class="frow"><label class="flabel">Gender</label>
-          <select class="fselect" id="r-gender">
-            <option value="">Select</option><option>Male</option><option>Female</option><option>Other</option>
-          </select>
-        </div>
-        <div class="frow"><label class="flabel">Course *</label>
-          <select class="fselect" id="r-course">
-            <option value="">Select Course</option>
-            <option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option>
-            <option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option>
-            <option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option>
-          </select>
-        </div>
-        <div class="frow"><label class="flabel">Time Slot *</label>
-          <select class="fselect" id="r-slot">
-            <option value="">Select Slot</option>
-            <option>07:00 AM</option><option>08:00 AM</option><option>09:00 AM</option>
-            <option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option>
-            <option>01:00 PM</option><option>02:00 PM</option><option>03:00 PM</option>
-            <option>04:00 PM</option><option>05:00 PM</option><option>06:00 PM</option>
-          </select>
-        </div>
-      </div>
-      <div class="frow"><label class="flabel">Address</label><input class="finput" id="r-addr" placeholder="Full address, City, PIN"></div>
-      <div class="g2">
-        <div class="frow"><label class="flabel">Password *</label><input class="finput" type="password" id="r-pass" placeholder="Min. 6 characters"></div>
-        <div class="frow"><label class="flabel">Confirm Password *</label><input class="finput" type="password" id="r-pass2" placeholder="Repeat password"></div>
-      </div>
-      <div id="reg-err" class="info-box info-err"></div>
-      <div id="reg-ok" class="info-box info-ok"></div>
-      <button class="btn-pri" style="width:100%;justify-content:center" onclick="doRegister()" id="reg-btn">
-        <i class="ti ti-user-plus"></i> Register &amp; Submit
-      </button>
+  <div class="reg-wrap"><div class="reg-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div style="background:var(--grad);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;flex-shrink:0">RI</div>
+      <div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px">Student Registration</div><div style="font-size:11px;color:var(--muted)">ROY INFOTECH Coaching</div></div>
+      <button class="btn-out btn-sm" style="margin-left:auto" onclick="goLogin()"><i class="ti ti-arrow-left"></i> Back</button>
     </div>
-  </div>
+    <div class="g2">
+      <div class="frow"><label class="flabel">Full Name *</label><input class="finput" id="r-name" placeholder="Ravi Kumar"></div>
+      <div class="frow"><label class="flabel">Father Name *</label><input class="finput" id="r-father" placeholder="Ramesh Kumar"></div>
+      <div class="frow"><label class="flabel">Mobile *</label><input class="finput" id="r-mobile" placeholder="9876543210" maxlength="10" inputmode="numeric"></div>
+      <div class="frow"><label class="flabel">Email *</label><input class="finput" id="r-email" placeholder="ravi@email.com" type="email"></div>
+      <div class="frow"><label class="flabel">Date of Birth</label><input class="finput" type="date" id="r-dob"></div>
+      <div class="frow"><label class="flabel">Gender</label>
+        <select class="fselect" id="r-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="frow"><label class="flabel">Course *</label>
+        <select class="fselect" id="r-course"><option value="">Select Course</option><option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option><option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option><option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option></select></div>
+      <div class="frow"><label class="flabel">Time Slot *</label>
+        <select class="fselect" id="r-slot"><option value="">Select Slot</option><option>07:00 AM</option><option>08:00 AM</option><option>09:00 AM</option><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>01:00 PM</option><option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option><option>05:00 PM</option><option>06:00 PM</option></select></div>
+    </div>
+    <div class="frow"><label class="flabel">Address</label><input class="finput" id="r-addr" placeholder="Full address, City, PIN"></div>
+    <div class="g2">
+      <div class="frow"><label class="flabel">Password *</label><input class="finput" type="password" id="r-pass" placeholder="Min. 6 characters"></div>
+      <div class="frow"><label class="flabel">Confirm Password *</label><input class="finput" type="password" id="r-pass2" placeholder="Repeat password"></div>
+    </div>
+    <div id="reg-err" class="info-box info-err"></div>
+    <div id="reg-ok" class="info-box info-ok"></div>
+    <button class="btn-pri" style="width:100%;justify-content:center" onclick="doRegister()" id="reg-btn"><i class="ti ti-user-plus"></i> Register &amp; Submit</button>
+  </div></div>
 </div>
 
-<!-- =============== MAIN APP =============== -->
+<!-- ============ MAIN APP ============ -->
 <div id="scr-app" class="screen">
-  <!-- Topbar -->
   <div class="topbar">
-    <div class="topbar-brand">
-      <div class="topbar-logo">RI</div>
-      ROY INFOTECH
-    </div>
+    <div class="topbar-brand"><div class="topbar-logo">RI</div>ROY INFOTECH</div>
     <div class="top-actions">
       <span class="mode-pill" id="mode-lbl">Student</span>
-      <button class="tbtn" onclick="showSec('s-notifications')">
-        <i class="ti ti-bell"></i><span class="nb" id="nb">0</span>
-      </button>
+      <button class="tbtn" onclick="showSec('s-notifications')"><i class="ti ti-bell"></i><span class="nb" id="nb">0</span></button>
       <button class="tbtn" onclick="doLogout()"><i class="ti ti-logout"></i></button>
     </div>
   </div>
-
   <div class="app-wrap">
-    <!-- Sidebar / Bottom Nav -->
     <div class="sidebar" id="sidebar">
       <div class="sec-label">Main</div>
-      <div class="nav-item active" id="nav-s-dashboard" onclick="showSec('s-dashboard')"><i class="ti ti-home"></i><span>Home</span></div>
-      <div class="nav-item" id="nav-s-attendance" onclick="showSec('s-attendance')"><i class="ti ti-calendar-check"></i><span>Attendance</span></div>
-      <div class="nav-item" id="nav-s-reports" onclick="showSec('s-reports')"><i class="ti ti-chart-bar"></i><span>Reports</span></div>
-      <div class="nav-item" id="nav-s-profile" onclick="showSec('s-profile')"><i class="ti ti-user"></i><span>Profile</span></div>
-      <div class="nav-item" id="nav-s-notifications" onclick="showSec('s-notifications')"><i class="ti ti-bell"></i><span>Alerts</span></div>
+      <div class="nav-item active" id="nav-s-dashboard"     onclick="showSec('s-dashboard')"><i class="ti ti-home"></i><span>Home</span></div>
+      <div class="nav-item"        id="nav-s-attendance"    onclick="showSec('s-attendance')"><i class="ti ti-calendar-check"></i><span>Attendance</span></div>
+      <div class="nav-item"        id="nav-s-reports"       onclick="showSec('s-reports')"><i class="ti ti-chart-bar"></i><span>Reports</span></div>
+      <div class="nav-item"        id="nav-s-profile"       onclick="showSec('s-profile')"><i class="ti ti-user"></i><span>Profile</span></div>
+      <div class="nav-item"        id="nav-s-notifications" onclick="showSec('s-notifications')"><i class="ti ti-bell"></i><span>Alerts</span></div>
       <div id="admin-nav" style="display:none">
         <div class="sec-label">Admin</div>
-        <div class="nav-item" id="nav-a-dashboard" onclick="showSec('a-dashboard')"><i class="ti ti-layout-dashboard"></i><span>Overview</span></div>
-        <div class="nav-item" id="nav-a-students" onclick="showSec('a-students')"><i class="ti ti-users"></i><span>Students</span></div>
+        <div class="nav-item" id="nav-a-dashboard"  onclick="showSec('a-dashboard')"><i class="ti ti-layout-dashboard"></i><span>Overview</span></div>
+        <div class="nav-item" id="nav-a-students"   onclick="showSec('a-students')"><i class="ti ti-users"></i><span>Students</span></div>
         <div class="nav-item" id="nav-a-attendance" onclick="showSec('a-attendance')"><i class="ti ti-calendar-stats"></i><span>Records</span></div>
-        <div class="nav-item" id="nav-a-fees" onclick="showSec('a-fees')"><i class="ti ti-credit-card"></i><span>Fees</span></div>
-        <div class="nav-item" id="nav-a-notify" onclick="showSec('a-notify')"><i class="ti ti-speakerphone"></i><span>Notify</span></div>
-        <div class="nav-item" id="nav-a-pending" onclick="showSec('a-pending')">
+        <div class="nav-item" id="nav-a-fees"       onclick="showSec('a-fees')"><i class="ti ti-credit-card"></i><span>Fees</span></div>
+        <div class="nav-item" id="nav-a-notify"     onclick="showSec('a-notify')"><i class="ti ti-speakerphone"></i><span>Notify</span></div>
+        <div class="nav-item" id="nav-a-pending"    onclick="showSec('a-pending')">
           <i class="ti ti-clock"></i><span>Pending <span id="pending-cnt" class="pill p-amber" style="font-size:9px;padding:1px 5px;display:none">0</span></span>
         </div>
       </div>
     </div>
+    <div class="main">
 
-    <!-- Main Content -->
-    <div class="main" id="main">
-
-      <!-- ===== STUDENT DASHBOARD ===== -->
+      <!-- STUDENT DASHBOARD -->
       <div data-sec="s-dashboard" class="active">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap">
           <div>
             <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px" id="dash-greet">Good Morning!</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px" id="dash-sub">—</div>
           </div>
-          <button class="btn-pri" id="att-main-btn" onclick="markAttendance()" style="padding:8px 14px;font-size:12px;flex-shrink:0">
-            <i class="ti ti-check"></i> Mark Present
-          </button>
+          <button class="btn-pri" id="att-main-btn" onclick="markAttendance()" style="padding:8px 14px;font-size:12px;flex-shrink:0"><i class="ti ti-check"></i> Mark Present</button>
         </div>
+        <div id="today-banner" style="display:none"></div>
         <div id="fee-alert-box" class="fee-alert" style="display:none">
           <i class="ti ti-alert-circle" style="font-size:22px;color:var(--amber);flex-shrink:0;margin-top:1px"></i>
-          <div>
-            <div style="font-weight:700;font-size:12px;color:#92400e">Fee Reminder</div>
-            <div style="font-size:11px;color:#a16207;margin-top:2px" id="fee-alert-txt"></div>
-          </div>
+          <div><div style="font-weight:700;font-size:12px;color:#92400e">Fee Reminder</div><div style="font-size:11px;color:#a16207;margin-top:2px" id="fee-alert-txt"></div></div>
         </div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="d-present">0</div><div class="stat-lbl">Present Days</div></div>
           <div class="stat s-red"><div class="stat-num" id="d-absent">0</div><div class="stat-lbl">Absent Days</div></div>
-          <div class="stat s-green"><div class="stat-num" id="d-pct">0%</div><div class="stat-lbl">Attendance</div></div>
+          <div class="stat s-green"><div class="stat-num" id="d-pct">0%</div><div class="stat-lbl">Attendance %</div></div>
           <div class="stat s-purple"><div class="stat-num" id="d-total">0</div><div class="stat-lbl">Total Classes</div></div>
         </div>
         <div class="g2">
@@ -364,22 +233,15 @@ textarea.finput{resize:vertical;min-height:80px}
                   <circle cx="44" cy="44" r="35" fill="none" stroke="#f1f5f9" stroke-width="9"/>
                   <circle cx="44" cy="44" r="35" fill="none" stroke="#1a73e8" stroke-width="9" stroke-linecap="round" id="att-ring" stroke-dasharray="0 220"/>
                 </svg>
-                <div class="att-circ-txt">
-                  <div class="att-pct-big" id="circ-pct">0%</div>
-                  <div class="att-pct-sub">PRESENT</div>
-                </div>
+                <div class="att-circ-txt"><div class="att-pct-big" id="circ-pct">0%</div><div class="att-pct-sub">PRESENT</div></div>
               </div>
               <div style="flex:1;min-width:0">
                 <div style="margin-bottom:9px">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-                    <span style="color:var(--muted)">Present</span><span style="font-weight:600" id="ov-p">0 days</span>
-                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--muted)">Present</span><span style="font-weight:600" id="ov-p">0 days</span></div>
                   <div class="pbar"><div class="pbar-fill" id="pb1" style="width:0%"></div></div>
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-                    <span style="color:var(--muted)">Absent</span><span style="font-weight:600;color:var(--red)" id="ov-a">0 days</span>
-                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--muted)">Absent</span><span style="font-weight:600;color:var(--red)" id="ov-a">0 days</span></div>
                   <div class="pbar"><div class="pbar-fill" id="pb2" style="width:0%;background:linear-gradient(90deg,#ef4444,#f87171)"></div></div>
                 </div>
               </div>
@@ -392,42 +254,32 @@ textarea.finput{resize:vertical;min-height:80px}
               <div style="font-size:11px;color:var(--muted);margin-top:2px">ROY INFOTECH Coaching</div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:11px">
-              <div><div style="color:var(--muted);margin-bottom:2px">Batch Time</div><div style="font-weight:600" id="course-slot">—</div></div>
+              <div><div style="color:var(--muted);margin-bottom:2px">Batch</div><div style="font-weight:600" id="course-slot">—</div></div>
               <div><div style="color:var(--muted);margin-bottom:2px">Status</div><span class="pill p-green">Active</span></div>
               <div><div style="color:var(--muted);margin-bottom:2px">Student ID</div><div style="font-weight:600;font-size:10px" id="course-id">—</div></div>
-              <div><div style="color:var(--muted);margin-bottom:2px">Fee Status</div><div id="fee-status-lbl">—</div></div>
+              <div><div style="color:var(--muted);margin-bottom:2px">Fee</div><div id="fee-status-lbl">—</div></div>
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-title">Recent Notifications</div>
-          <div id="dash-notifs"></div>
-        </div>
+        <div class="card"><div class="card-title">Notifications</div><div id="dash-notifs"></div></div>
       </div>
 
-      <!-- ===== STUDENT ATTENDANCE ===== -->
+      <!-- STUDENT ATTENDANCE -->
       <div data-sec="s-attendance">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Attendance</div>
         <div class="g2">
           <div class="card">
-            <div class="card-title">May 2026</div>
-            <div class="cal-grid">
-              <div class="cal-hd">S</div><div class="cal-hd">M</div><div class="cal-hd">T</div><div class="cal-hd">W</div><div class="cal-hd">T</div><div class="cal-hd">F</div><div class="cal-hd">S</div>
-              <div class="cal-cell cal-empty">.</div><div class="cal-cell cal-empty">.</div><div class="cal-cell cal-empty">.</div>
-              <div class="cal-cell cal-present">1</div><div class="cal-cell cal-present">2</div><div class="cal-cell cal-absent">3</div><div class="cal-cell cal-empty">.</div>
-              <div class="cal-cell cal-empty">.</div><div class="cal-cell cal-present">6</div><div class="cal-cell cal-present">7</div>
-              <div class="cal-cell cal-absent">8</div><div class="cal-cell cal-present">9</div><div class="cal-cell cal-present">10</div><div class="cal-cell cal-empty">.</div>
-              <div class="cal-cell cal-empty">.</div><div class="cal-cell cal-today" id="cal-today">14</div>
-            </div>
+            <div class="card-title" id="cal-title">Calendar</div>
+            <div class="cal-grid" id="att-calendar"></div>
             <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap">
               <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#d1fae5;display:inline-block"></span>Present</span>
               <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#fee2e2;display:inline-block"></span>Absent</span>
-              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue);display:inline-block"></span>Today</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block"></span>Today Present</span>
             </div>
           </div>
           <div class="card">
-            <div class="card-title">Mark Attendance</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap the QR code or button to mark today's attendance.</div>
+            <div class="card-title">Mark Today's Attendance</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap QR code or button to mark today's attendance.</div>
             <div class="qr-box" onclick="markQR()" id="qr-wrap">
               <div class="qr-grid" id="qr-grid"></div>
               <div style="font-size:12px;font-weight:600;color:var(--text)">Scan / Tap QR Code</div>
@@ -438,50 +290,41 @@ textarea.finput{resize:vertical;min-height:80px}
               <div style="font-weight:700;font-size:13px;color:#065f46">Attendance Marked!</div>
               <div style="font-size:11px;color:#047857;margin-top:3px" id="att-marked-info"></div>
             </div>
+            <div id="att-already" style="display:none;background:#dbeafe;border:1px solid #93c5fd;border-radius:10px;padding:13px;text-align:center;margin-top:10px">
+              <div style="font-size:22px;margin-bottom:5px">✅</div>
+              <div style="font-weight:700;font-size:13px;color:#1e40af">Pehle Se Mark Hai!</div>
+              <div style="font-size:11px;color:#1d4ed8;margin-top:3px" id="att-already-time"></div>
+            </div>
             <div style="margin-top:12px;font-size:12px;display:flex;align-items:center;gap:7px">
-              <span style="color:var(--muted)">Today's status:</span>
-              <span id="att-status-pill" class="pill p-amber">Not Marked</span>
+              <span style="color:var(--muted)">Aaj:</span><span id="att-status-pill" class="pill p-amber">Not Marked</span>
             </div>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Attendance Log</div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Status</th><th>Method</th></tr></thead>
-              <tbody>
-                <tr><td>10 May</td><td>Sat</td><td>10:03 AM</td><td><span class="pill p-green">Present</span></td><td><span class="pill p-blue">QR</span></td></tr>
-                <tr><td>09 May</td><td>Fri</td><td>10:05 AM</td><td><span class="pill p-green">Present</span></td><td><span class="pill p-purple">Manual</span></td></tr>
-                <tr><td>08 May</td><td>Thu</td><td>—</td><td><span class="pill p-red">Absent</span></td><td>—</td></tr>
-                <tr><td>07 May</td><td>Wed</td><td>10:01 AM</td><td><span class="pill p-green">Present</span></td><td><span class="pill p-blue">QR</span></td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div class="card-title">Recent Attendance Log</div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Date</th><th>Day</th><th>Time</th><th>Status</th><th>Method</th></tr></thead>
+            <tbody id="att-log-body"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:14px">Loading...</td></tr></tbody>
+          </table></div>
         </div>
       </div>
 
-      <!-- ===== STUDENT REPORTS ===== -->
+      <!-- STUDENT REPORTS -->
       <div data-sec="s-reports">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Reports</div>
         <div class="g4">
-          <div class="stat s-blue"><div class="stat-num" id="r-present">0</div><div class="stat-lbl">This Month</div></div>
-          <div class="stat s-green"><div class="stat-num" id="r-pct">0%</div><div class="stat-lbl">Monthly %</div></div>
-          <div class="stat s-purple"><div class="stat-num" id="r-total">0</div><div class="stat-lbl">Total Present</div></div>
-          <div class="stat s-amber"><div class="stat-num" id="r-absent">0</div><div class="stat-lbl">Total Absent</div></div>
+          <div class="stat s-blue"><div class="stat-num" id="r-present">0</div><div class="stat-lbl">Total Present</div></div>
+          <div class="stat s-red"><div class="stat-num" id="r-absent">0</div><div class="stat-lbl">Total Absent</div></div>
+          <div class="stat s-green"><div class="stat-num" id="r-pct">0%</div><div class="stat-lbl">Attendance %</div></div>
+          <div class="stat s-amber"><div class="stat-num" id="r-total">0</div><div class="stat-lbl">Total Classes</div></div>
         </div>
         <div class="card">
           <div class="card-title">Monthly Performance</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>January</span><span style="font-weight:600">95%</span></div><div class="pbar"><div class="pbar-fill" style="width:95%"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>February</span><span style="font-weight:600">92%</span></div><div class="pbar"><div class="pbar-fill" style="width:92%"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>March</span><span style="font-weight:600">78%</span></div><div class="pbar"><div class="pbar-fill" style="width:78%"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>April</span><span style="font-weight:600">85%</span></div><div class="pbar"><div class="pbar-fill" style="width:85%"></div></div></div>
-            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>May (so far)</span><span style="font-weight:600" id="r-may-pct">0%</span></div><div class="pbar"><div class="pbar-fill" id="r-may-bar" style="width:0%"></div></div></div>
-          </div>
+          <div style="display:flex;flex-direction:column;gap:10px" id="report-bars"><div style="color:var(--muted);font-size:12px;padding:8px">Loading...</div></div>
         </div>
       </div>
 
-      <!-- ===== STUDENT PROFILE ===== -->
+      <!-- STUDENT PROFILE -->
       <div data-sec="s-profile">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Profile</div>
         <div class="card">
@@ -504,23 +347,19 @@ textarea.finput{resize:vertical;min-height:80px}
             </div>
             <div style="display:flex;align-items:center;gap:12px">
               <div id="card-av" class="av" style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.3);font-size:15px">?</div>
-              <div>
-                <div style="font-weight:700;font-size:14px" id="card-name">—</div>
-                <div style="font-size:11px;opacity:.8;margin-top:2px" id="card-course">—</div>
-                <div style="font-size:10px;opacity:.65;margin-top:2px" id="card-id">—</div>
-              </div>
+              <div><div style="font-weight:700;font-size:14px" id="card-name">—</div><div style="font-size:11px;opacity:.8;margin-top:2px" id="card-course">—</div><div style="font-size:10px;opacity:.65;margin-top:2px" id="card-id">—</div></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ===== NOTIFICATIONS ===== -->
+      <!-- NOTIFICATIONS -->
       <div data-sec="s-notifications">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Notifications</div>
         <div id="student-notifs-list"></div>
       </div>
 
-      <!-- ===== ADMIN DASHBOARD ===== -->
+      <!-- ADMIN DASHBOARD -->
       <div data-sec="a-dashboard">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Admin Overview</div>
@@ -528,54 +367,50 @@ textarea.finput{resize:vertical;min-height:80px}
         </div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="ad-total">0</div><div class="stat-lbl">Total Students</div></div>
-          <div class="stat s-green"><div class="stat-num" id="ad-today">0</div><div class="stat-lbl">High Attendance</div></div>
+          <div class="stat s-green"><div class="stat-num" id="ad-today">0</div><div class="stat-lbl">Today Present</div></div>
           <div class="stat s-amber"><div class="stat-num" id="ad-pending-fee">0</div><div class="stat-lbl">Fee Pending</div></div>
           <div class="stat s-purple"><div class="stat-num" id="ad-new">0</div><div class="stat-lbl">Pending Regs</div></div>
         </div>
-        <div class="card">
-          <div class="card-title">Pending Registrations</div>
-          <div id="recent-regs-list"><div style="color:var(--muted);font-size:12px;padding:8px">Loading...</div></div>
-        </div>
+        <div class="card"><div class="card-title">Pending Registrations</div><div id="recent-regs-list"><div style="color:var(--muted);font-size:12px;padding:8px">Loading...</div></div></div>
       </div>
 
-      <!-- ===== ADMIN STUDENTS ===== -->
+      <!-- ADMIN STUDENTS -->
       <div data-sec="a-students">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">All Students</div>
           <div style="display:flex;gap:7px;flex-wrap:wrap">
             <input class="finput" id="search-inp" placeholder="Search..." style="width:140px;padding:7px 10px;font-size:12px" oninput="filterStudents()">
             <select class="fselect" id="filter-course" style="width:105px;padding:7px;font-size:12px" onchange="filterStudents()">
-              <option value="">All Courses</option>
-              <option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option>
-              <option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option>
-              <option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option>
+              <option value="">All Courses</option><option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option><option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option><option>MIS</option><option>CYBERCAFE</option><option>TYPING</option><option>OTHER</option>
             </select>
           </div>
         </div>
-        <div class="card">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Batch</th><th class="hide-mob">Mobile</th><th>Att%</th><th>Fee</th><th>Action</th></tr></thead>
-              <tbody id="student-tbody"></tbody>
-            </table>
-          </div>
-        </div>
+        <div class="card"><div class="tbl-wrap"><table>
+          <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Batch</th><th class="hide-mob">Mobile</th><th>Present</th><th>Absent</th><th>Att%</th><th>Fee</th><th>Action</th></tr></thead>
+          <tbody id="student-tbody"></tbody>
+        </table></div></div>
       </div>
 
-      <!-- ===== ADMIN ATTENDANCE ===== -->
+      <!-- ADMIN ATTENDANCE RECORDS -->
       <div data-sec="a-attendance">
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Attendance Records</div>
-        <div class="card">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Slot</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
-              <tbody id="admin-att-body"></tbody>
-            </table>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Attendance Records</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <select class="fselect" id="att-filter-course" style="width:110px;padding:7px;font-size:12px" onchange="renderAdminAttTable()">
+              <option value="">All Courses</option><option>ADCA</option><option>DCA</option><option>ADCA+</option><option>TALLY</option><option>DTP</option><option>HTML</option><option>CSS</option><option>JS</option>
+            </select>
+            <select class="fselect" id="att-filter-status" style="width:110px;padding:7px;font-size:12px" onchange="renderAdminAttTable()">
+              <option value="">All Status</option><option value="Present">Present Today</option><option value="Absent">Absent Today</option>
+            </select>
           </div>
         </div>
+        <div class="card"><div class="tbl-wrap"><table>
+          <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Slot</th><th>Total Present</th><th>Total Absent</th><th>Att%</th><th>Today</th></tr></thead>
+          <tbody id="admin-att-body"></tbody>
+        </table></div></div>
       </div>
 
-      <!-- ===== ADMIN FEES ===== -->
+      <!-- ADMIN FEES -->
       <div data-sec="a-fees">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Fee Manager</div>
         <div class="g4">
@@ -589,25 +424,19 @@ textarea.finput{resize:vertical;min-height:80px}
             <div class="card-title" style="margin:0">Fee Status</div>
             <button class="btn-pri" style="font-size:11px;padding:7px 12px" onclick="sendAllReminders()"><i class="ti ti-send"></i> Send All Reminders</button>
           </div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Student</th><th>Course</th><th>Amount</th><th class="hide-mob">Due</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody id="fee-tbody"></tbody>
-            </table>
-          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Student</th><th>Course</th><th>Amount</th><th class="hide-mob">Due</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="fee-tbody"></tbody>
+          </table></div>
         </div>
       </div>
 
-      <!-- ===== ADMIN NOTIFY ===== -->
+      <!-- ADMIN NOTIFY -->
       <div data-sec="a-notify">
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">Send Notification</div>
         <div class="card">
-          <div class="frow"><label class="flabel">Type</label>
-            <select class="fselect" id="n-type"><option>Fee Reminder</option><option>Attendance Alert</option><option>Holiday Notice</option><option>Course Update</option><option>Exam Info</option><option>Custom</option></select>
-          </div>
-          <div class="frow"><label class="flabel">Send To</label>
-            <select class="fselect" id="n-to"><option>All Students</option><option>ADCA Batch</option><option>DCA Batch</option><option>TALLY Batch</option></select>
-          </div>
+          <div class="frow"><label class="flabel">Type</label><select class="fselect" id="n-type"><option>Fee Reminder</option><option>Attendance Alert</option><option>Holiday Notice</option><option>Course Update</option><option>Exam Info</option><option>Custom</option></select></div>
+          <div class="frow"><label class="flabel">Send To</label><select class="fselect" id="n-to"><option>All Students</option><option>ADCA Batch</option><option>DCA Batch</option><option>TALLY Batch</option></select></div>
           <div class="frow"><label class="flabel">Title</label><input class="finput" id="n-title" placeholder="Notification title"></div>
           <div class="frow"><label class="flabel">Message</label><textarea class="finput" id="n-msg" placeholder="Type message..."></textarea></div>
           <button class="btn-pri" onclick="sendNotif()"><i class="ti ti-speakerphone"></i> Send Push Notification</button>
@@ -615,7 +444,7 @@ textarea.finput{resize:vertical;min-height:80px}
         </div>
       </div>
 
-      <!-- ===== ADMIN PENDING ===== -->
+      <!-- ADMIN PENDING -->
       <div data-sec="a-pending">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Pending Approvals</div>
@@ -623,8 +452,7 @@ textarea.finput{resize:vertical;min-height:80px}
         </div>
         <div id="pending-list"></div>
         <div id="no-pending" style="display:none;text-align:center;padding:40px;color:var(--muted)">
-          <i class="ti ti-checks" style="font-size:40px;display:block;margin-bottom:8px;color:#a7f3d0"></i>
-          No pending registrations
+          <i class="ti ti-checks" style="font-size:40px;display:block;margin-bottom:8px;color:#a7f3d0"></i>No pending registrations
         </div>
       </div>
 
@@ -645,729 +473,572 @@ textarea.finput{resize:vertical;min-height:80px}
   </div>
 </div>
 
-<!-- ===================== FIREBASE SDK ===================== -->
+<!-- FIREBASE SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, doc,
-  updateDoc, deleteDoc, query, where, serverTimestamp, setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
-  apiKey: "AIzaSyD73nMTewCzR0SrshWaG0iSVy9wDaLgu3w",
-  authDomain: "attendance-3e324.firebaseapp.com",
-  projectId: "attendance-3e324",
-  storageBucket: "attendance-3e324.firebasestorage.app",
-  messagingSenderId: "810225158577",
-  appId: "1:810225158577:web:ba95b2f56ac9c3d0c11590"
+  apiKey:"AIzaSyD73nMTewCzR0SrshWaG0iSVy9wDaLgu3w",authDomain:"attendance-3e324.firebaseapp.com",
+  projectId:"attendance-3e324",storageBucket:"attendance-3e324.firebasestorage.app",
+  messagingSenderId:"810225158577",appId:"1:810225158577:web:ba95b2f56ac9c3d0c11590"
 };
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window._fb = { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, serverTimestamp, setDoc };
-window._fbReady = true;
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+window._fb={db,collection,addDoc,getDocs,doc,updateDoc,deleteDoc,query,where,setDoc,getDoc};
+window._fbReady=true;
 document.dispatchEvent(new Event('fbReady'));
 </script>
 
-<!-- ===================== APP LOGIC ===================== -->
 <script>
-// ============================================================
-// STATE
-// ============================================================
-var ADMIN_CREDS = { email: 'admin@royinfotech.in', password: 'admin123' };
+/* ==================== STATE ==================== */
+var ADMIN_CREDS={email:'admin@royinfotech.in',password:'admin123'};
+var DEMO_STUDENTS=[
+  {id:'RI-2026-0001',name:'Priya Sharma',father:'Suresh Sharma',mobile:'9812345678',email:'priya@gmail.com',dob:'2005-03-12',gender:'Female',course:'DCA',slot:'11:00 AM',address:'456 Park Road, Gaya',password:'priya123',present:24,absent:1,feeStatus:'Paid',feeAmt:1000,approved:true},
+  {id:'RI-2026-0002',name:'Arjun Mishra',father:'Vinod Mishra',mobile:'9823456789',email:'arjun@gmail.com',dob:'2004-07-20',gender:'Male',course:'TALLY',slot:'02:00 PM',address:'789 MG Road, Gaya',password:'arjun123',present:18,absent:7,feeStatus:'Overdue',feeAmt:800,approved:true},
+  {id:'RI-2026-0003',name:'Sunita Gupta',father:'Mohan Gupta',mobile:'9834567890',email:'sunita@gmail.com',dob:'2006-01-05',gender:'Female',course:'ADCA+',slot:'09:00 AM',address:'12 Station Rd, Gaya',password:'sunita123',present:23,absent:2,feeStatus:'Paid',feeAmt:1500,approved:true}
+];
+var DB={students:JSON.parse(JSON.stringify(DEMO_STUDENTS)),pendingRegs:[],notifications:[
+  {type:'amber',icon:'ti-alert-circle',title:'Fee Reminder',msg:'Monthly fee due on 15th May 2026',time:'Today'},
+  {type:'blue',icon:'ti-info-circle',title:'Holiday Notice',msg:'Institute closed on 20th May',time:'Yesterday'},
+  {type:'green',icon:'ti-certificate',title:'Course Update',msg:'Tally Advanced batch starts June 1st',time:'2 days ago'}
+]};
 
-// Demo students (always available, always approved)
-var DB = {
-  students: [
-    { id:'RI-2026-0001', name:'Priya Sharma',  father:'Suresh Sharma', mobile:'9812345678', email:'priya@gmail.com',   dob:'2005-03-12', gender:'Female', course:'DCA',   slot:'11:00 AM', address:'456 Park Road, Gaya', password:'priya123',  present:24, absent:1, feeStatus:'Paid',    feeAmt:1000, approved:true },
-    { id:'RI-2026-0002', name:'Arjun Mishra',  father:'Vinod Mishra',  mobile:'9823456789', email:'arjun@gmail.com',   dob:'2004-07-20', gender:'Male',   course:'TALLY', slot:'02:00 PM', address:'789 MG Road, Gaya',  password:'arjun123',  present:18, absent:7, feeStatus:'Overdue', feeAmt:800,  approved:true },
-    { id:'RI-2026-0003', name:'Sunita Gupta',  father:'Mohan Gupta',   mobile:'9834567890', email:'sunita@gmail.com',  dob:'2006-01-05', gender:'Female', course:'ADCA+', slot:'09:00 AM', address:'12 Station Rd, Gaya', password:'sunita123', present:23, absent:2, feeStatus:'Paid',    feeAmt:1500, approved:true }
-  ],
-  pendingRegs: [],
-  notifications: [
-    { type:'amber', icon:'ti-alert-circle', title:'Fee Reminder',  msg:'Monthly fee due on 15th May 2026',      time:'Today' },
-    { type:'blue',  icon:'ti-info-circle',  title:'Holiday Notice', msg:'Institute closed on 20th May (Exams)', time:'Yesterday' },
-    { type:'green', icon:'ti-certificate',  title:'Course Update',  msg:'Tally Advanced batch starts June 1st', time:'2 days ago' }
-  ]
-};
+// KEY FIX: attendance stored per student: { "YYYY-MM-DD": { status, time, method } }
+var ATT_CACHE = {};  // ATT_CACHE[studentId] = { "2026-05-14": {status:'Present', time:'10:02 AM', method:'QR'}, ... }
 
-var currentUser   = null;
-var isAdmin       = false;
-var attMarkedToday = false;
-var loginMode     = 'student';
-var idCounter     = 4;
-var fbLoaded      = false;
+var currentUser=null, isAdmin=false, loginMode='student', idCounter=4;
 
-// ============================================================
-// FIREBASE READY
-// ============================================================
-document.addEventListener('fbReady', function () {
-  fbLoaded = true;
-  // Pre-load approved students from Firebase into DB.students
-  loadApprovedFromFirebase();
+/* ==================== FIREBASE INIT ==================== */
+document.addEventListener('fbReady', function(){
+  loadApprovedStudentsFB();
 });
 
-function loadApprovedFromFirebase() {
-  if (!window._fb) return;
-  var fb = window._fb;
-  fb.getDocs(fb.collection(fb.db, 'approvedStudents'))
-    .then(function (snap) {
-      snap.forEach(function (d) {
-        var data = d.data();
-        data.fbDocId = d.id;
-        // Avoid duplicates with demo students
-        if (!DB.students.find(s => s.email.toLowerCase() === data.email.toLowerCase())) {
-          data.approved = true;
-          DB.students.push(data);
-        }
-      });
-    })
-    .catch(function (e) { console.warn('approvedStudents load failed:', e); });
+function loadApprovedStudentsFB(){
+  if(!window._fb) return;
+  window._fb.getDocs(window._fb.collection(window._fb.db,'approvedStudents')).then(function(snap){
+    snap.forEach(function(d){
+      var data=d.data(); data.fbDocId=d.id; data.approved=true;
+      if(!DB.students.find(s=>s.email.toLowerCase()===data.email.toLowerCase())) DB.students.push(data);
+    });
+  }).catch(function(e){console.warn('loadApproved:',e);});
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
-function showLoading(txt) {
-  var el = document.getElementById('loading-overlay');
-  el.style.display = 'flex';
-  document.getElementById('loading-text').textContent = txt || 'Loading...';
-}
-function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+/* ==================== HELPERS ==================== */
+function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ return new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}); }
+function greeting(){ var h=new Date().getHours(); return h<12?'Morning':h<17?'Afternoon':'Evening'; }
+function initials(name){ return name?name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'??'; }
+function avatarColor(i){ var c=['linear-gradient(135deg,#1a73e8,#4f98f0)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#6c47ff,#a78bfa)','linear-gradient(135deg,#ef4444,#f87171)']; return c[i%c.length]; }
+function presentCount(rec){ return Object.keys(rec||{}).filter(k=>(rec[k].status||'Present')==='Present').length; }
+function absentCount(rec){ return Object.keys(rec||{}).filter(k=>(rec[k].status||'Present')==='Absent').length; }
+function getP(s){ var r=ATT_CACHE[s.id]; return (r&&Object.keys(r).length>0)?presentCount(r):(s.present||0); }
+function getAb(s){ var r=ATT_CACHE[s.id]; return (r&&Object.keys(r).length>0)?absentCount(r):(s.absent||0); }
+function getPct(s){ var p=getP(s),ab=getAb(s),t=p+ab; return t?Math.round(p/t*100):0; }
+function feeColor(f){ return f==='Paid'?'p-green':f==='Overdue'?'p-red':'p-amber'; }
+function courseColor(c){ var m={ADCA:'p-purple','ADCA+':'p-purple',DCA:'p-blue',TALLY:'p-amber',DTP:'p-blue',HTML:'p-green',CSS:'p-green',JS:'p-amber',MIS:'p-blue',CYBERCAFE:'p-gray',TYPING:'p-gray',OTHER:'p-gray'}; return m[c]||'p-gray'; }
+function setText(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+function setHTML(id,v){ var e=document.getElementById(id); if(e) e.innerHTML=v; }
+function showEl(id,d){ var e=document.getElementById(id); if(e) e.style.display=d||'block'; }
+function hideEl(id){ var e=document.getElementById(id); if(e) e.style.display='none'; }
+function showErr(id,msg){ var e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
+function setScreen(id){ ['scr-login','scr-reg','scr-app'].forEach(s=>document.getElementById(s).classList.remove('show')); document.getElementById(id).classList.add('show'); }
+function showLoading(t){ document.getElementById('loading-overlay').style.display='flex'; document.getElementById('loading-text').textContent=t||'Loading...'; }
+function hideLoading(){ document.getElementById('loading-overlay').style.display='none'; }
+function updatePendingBadge(){ var n=DB.pendingRegs.length; var el=document.getElementById('pending-cnt'); if(el){el.textContent=n;el.style.display=n>0?'':'none';} var nb=document.getElementById('nb'); if(nb) nb.textContent=n+DB.notifications.length; }
+function initQR(){ var g=document.getElementById('qr-grid'); if(!g) return; var pat=[1,1,1,0,1,1,1,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0]; g.innerHTML=pat.map(b=>'<div class="qr-px" style="background:'+(b?'#1a1f36':'#fff')+'"></div>').join(''); var qd=document.getElementById('qr-date'); if(qd) qd.textContent=todayStr(); }
 
-function initials(name) { return name ? name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() : '??'; }
+/* ==================== AUTH ==================== */
+function setLTab(m){ loginMode=m; document.querySelectorAll('#ltabs .tab').forEach((t,i)=>t.classList.toggle('active',(m==='student'&&i===0)||(m==='admin'&&i===1))); }
+function goReg(){ setScreen('scr-reg'); }
+function goLogin(){ setScreen('scr-login'); }
+function doLogout(){ currentUser=null; isAdmin=false; ATT_CACHE={}; setScreen('scr-login'); }
 
-function avatarColor(i) {
-  var c = [
-    'linear-gradient(135deg,#1a73e8,#4f98f0)',
-    'linear-gradient(135deg,#10b981,#34d399)',
-    'linear-gradient(135deg,#f59e0b,#fbbf24)',
-    'linear-gradient(135deg,#6c47ff,#a78bfa)',
-    'linear-gradient(135deg,#ef4444,#f87171)'
-  ];
-  return c[i % c.length];
-}
-
-function pct(s) { var t = s.present + s.absent; return t ? Math.round(s.present / t * 100) : 0; }
-
-function feeColor(f) { return f === 'Paid' ? 'p-green' : f === 'Overdue' ? 'p-red' : 'p-amber'; }
-
-function courseColor(c) {
-  var m = { ADCA:'p-purple','ADCA+':'p-purple', DCA:'p-blue', TALLY:'p-amber', DTP:'p-blue',
-            HTML:'p-green', CSS:'p-green', JS:'p-amber', MIS:'p-blue', CYBERCAFE:'p-gray', TYPING:'p-gray', OTHER:'p-gray' };
-  return m[c] || 'p-gray';
-}
-
-function showErr(elId, msg) { var el = document.getElementById(elId); el.textContent = msg; el.style.display = 'block'; }
-function hideEl(elId) { document.getElementById(elId).style.display = 'none'; }
-
-function greeting() { var h = new Date().getHours(); return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening'; }
-
-function todayStr() {
-  return new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
-}
-
-function setScreen(id) {
-  ['scr-login','scr-reg','scr-app'].forEach(s => {
-    document.getElementById(s).classList.remove('show');
-  });
-  document.getElementById(id).classList.add('show');
-}
-
-function initQR() {
-  var g = document.getElementById('qr-grid');
-  if (!g) return;
-  var pat = [1,1,1,0,1,1,1,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0];
-  g.innerHTML = pat.map(b => '<div class="qr-px" style="background:' + (b ? '#1a1f36' : '#fff') + '"></div>').join('');
-  var qd = document.getElementById('qr-date');
-  if (qd) qd.textContent = todayStr();
-}
-
-function updatePendingBadge() {
-  var n = DB.pendingRegs.length;
-  var el = document.getElementById('pending-cnt');
-  if (el) { el.textContent = n; el.style.display = n > 0 ? '' : 'none'; }
-  var nb = document.getElementById('nb');
-  if (nb) nb.textContent = n + DB.notifications.length;
-}
-
-// ============================================================
-// AUTH
-// ============================================================
-function setLTab(m) {
-  loginMode = m;
-  document.querySelectorAll('#ltabs .tab').forEach((t, i) => {
-    t.classList.toggle('active', (m === 'student' && i === 0) || (m === 'admin' && i === 1));
-  });
-}
-
-function goReg()   { setScreen('scr-reg'); }
-function goLogin() { setScreen('scr-login'); }
-function doLogout() { currentUser = null; isAdmin = false; attMarkedToday = false; setScreen('scr-login'); }
-
-// KEY FIX: Login now also searches Firebase-loaded approved students
-function doLogin() {
-  var email = (document.getElementById('li-email').value || '').trim().toLowerCase();
-  var pass  = (document.getElementById('li-pass').value  || '').trim();
+function doLogin(){
+  var email=(document.getElementById('li-email').value||'').trim().toLowerCase();
+  var pass=(document.getElementById('li-pass').value||'').trim();
   hideEl('login-err');
-
-  if (!email || !pass) { showErr('login-err', 'Please enter email and password.'); return; }
-
-  if (loginMode === 'admin') {
-    if (email === ADMIN_CREDS.email.toLowerCase() && pass === ADMIN_CREDS.password) {
-      isAdmin = true;
-      currentUser = { name: 'Admin', email: ADMIN_CREDS.email };
-      launchApp();
+  if(!email||!pass){showErr('login-err','Please enter email and password.');return;}
+  if(loginMode==='admin'){
+    if(email===ADMIN_CREDS.email.toLowerCase()&&pass===ADMIN_CREDS.password){isAdmin=true;currentUser={name:'Admin',email:ADMIN_CREDS.email};launchApp();}
+    else showErr('login-err','Invalid admin credentials.');
+    return;
+  }
+  var found=DB.students.find(s=>s.email.toLowerCase()===email&&s.password===pass&&s.approved);
+  if(found){isAdmin=false;currentUser=found;launchApp();return;}
+  var pend=DB.pendingRegs.find(s=>s.email.toLowerCase()===email&&s.password===pass);
+  if(pend){showErr('login-err','Registration pending admin approval.');return;}
+  if(!window._fb){showErr('login-err','Email or password incorrect.');return;}
+  showLoading('Verifying...');
+  window._fb.getDocs(window._fb.collection(window._fb.db,'approvedStudents')).then(function(snap){
+    hideLoading();
+    var found2=null;
+    snap.forEach(function(d){var data=d.data();if(data.email&&data.email.toLowerCase()===email&&data.password===pass&&data.approved) found2=data;});
+    if(found2){
+      if(!DB.students.find(s=>s.email.toLowerCase()===email)) DB.students.push(found2);
+      isAdmin=false;currentUser=found2;launchApp();
     } else {
-      showErr('login-err', 'Invalid admin credentials.');
+      window._fb.getDocs(window._fb.collection(window._fb.db,'pendingRegs')).then(function(snap2){
+        var ip=false; snap2.forEach(function(d){var data=d.data();if(data.email&&data.email.toLowerCase()===email) ip=true;});
+        showErr('login-err',ip?'Registration pending admin approval.':'Email or password incorrect. Register first.');
+      }).catch(function(){showErr('login-err','Email or password incorrect.');});
     }
-    return;
-  }
-
-  // Student login
-  // DB.students now includes Firebase-approved students (loaded on fbReady)
-  var found = DB.students.find(s => s.email.toLowerCase() === email && s.password === pass && s.approved);
-
-  if (found) {
-    isAdmin = false;
-    currentUser = found;
-    launchApp();
-    return;
-  }
-
-  // Check if pending
-  var pending = DB.pendingRegs.find(s => s.email.toLowerCase() === email && s.password === pass);
-  if (pending) {
-    showErr('login-err', 'Your registration is pending admin approval. Please wait.');
-    return;
-  }
-
-  // Maybe Firebase hasn't loaded yet — try fetching approved directly
-  if (window._fb) {
-    showLoading('Verifying credentials...');
-    var fb = window._fb;
-    fb.getDocs(fb.collection(fb.db, 'approvedStudents'))
-      .then(function (snap) {
-        hideLoading();
-        var found2 = null;
-        snap.forEach(function (d) {
-          var data = d.data();
-          if (data.email && data.email.toLowerCase() === email && data.password === pass && data.approved) {
-            found2 = data;
-          }
-        });
-        if (found2) {
-          // Add to local cache and login
-          if (!DB.students.find(s => s.email.toLowerCase() === email)) {
-            DB.students.push(found2);
-          }
-          isAdmin = false;
-          currentUser = found2;
-          launchApp();
-        } else {
-          // Also check pendingRegs collection
-          fb.getDocs(fb.collection(fb.db, 'pendingRegs'))
-            .then(function (snap2) {
-              var isPending = false;
-              snap2.forEach(function (d) {
-                var data = d.data();
-                if (data.email && data.email.toLowerCase() === email) isPending = true;
-              });
-              if (isPending) {
-                showErr('login-err', 'Your registration is pending admin approval.');
-              } else {
-                showErr('login-err', 'Email or password incorrect. Please register first.');
-              }
-            })
-            .catch(function () {
-              showErr('login-err', 'Email or password incorrect. Please register first.');
-            });
-        }
-      })
-      .catch(function (e) {
-        hideLoading();
-        showErr('login-err', 'Login failed. Check your internet connection.');
-      });
-  } else {
-    showErr('login-err', 'Email or password incorrect. Please register first.');
-  }
+  }).catch(function(){hideLoading();showErr('login-err','Login failed. Check internet.');});
 }
 
-// ============================================================
-// REGISTER
-// ============================================================
-function doRegister() {
-  var name   = document.getElementById('r-name').value.trim();
-  var father = document.getElementById('r-father').value.trim();
-  var mobile = document.getElementById('r-mobile').value.trim();
-  var email  = document.getElementById('r-email').value.trim().toLowerCase();
-  var dob    = document.getElementById('r-dob').value;
-  var gender = document.getElementById('r-gender').value;
-  var course = document.getElementById('r-course').value;
-  var slot   = document.getElementById('r-slot').value;
-  var addr   = document.getElementById('r-addr').value.trim();
-  var pass   = document.getElementById('r-pass').value;
-  var pass2  = document.getElementById('r-pass2').value;
-
-  hideEl('reg-err'); hideEl('reg-ok');
-
-  if (!name || !father || !mobile || !email || !course || !slot || !pass) {
-    showErr('reg-err', 'Please fill all required (*) fields.'); return;
+/* ==================== REGISTER ==================== */
+function doRegister(){
+  var name=document.getElementById('r-name').value.trim(), father=document.getElementById('r-father').value.trim();
+  var mobile=document.getElementById('r-mobile').value.trim(), email=document.getElementById('r-email').value.trim().toLowerCase();
+  var dob=document.getElementById('r-dob').value, gender=document.getElementById('r-gender').value;
+  var course=document.getElementById('r-course').value, slot=document.getElementById('r-slot').value;
+  var addr=document.getElementById('r-addr').value.trim(), pass=document.getElementById('r-pass').value, pass2=document.getElementById('r-pass2').value;
+  hideEl('reg-err');hideEl('reg-ok');
+  if(!name||!father||!mobile||!email||!course||!slot||!pass){showErr('reg-err','Please fill all required (*) fields.');return;}
+  if(!/^\d{10}$/.test(mobile)){showErr('reg-err','Enter valid 10-digit mobile number.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('reg-err','Enter valid email address.');return;}
+  if(pass.length<6){showErr('reg-err','Password minimum 6 characters.');return;}
+  if(pass!==pass2){showErr('reg-err','Passwords do not match.');return;}
+  if(DB.students.find(s=>s.email.toLowerCase()===email)||DB.pendingRegs.find(s=>s.email.toLowerCase()===email)){showErr('reg-err','Email already registered.');return;}
+  var newId='RI-2026-'+String(idCounter).padStart(4,'0'); idCounter++;
+  var student={id:newId,name,father,mobile,email,dob,gender,course,slot,address:addr,password:pass,present:0,absent:0,feeStatus:'Pending',feeAmt:(course==='ADCA'||course==='ADCA+')?1200:course==='DCA'?1000:800,approved:false,regDate:todayStr()};
+  var btn=document.getElementById('reg-btn'); btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> Submitting...';
+  function onOk(docId){
+    if(docId) student.fbDocId=docId;
+    DB.pendingRegs.push(student);updatePendingBadge();
+    var ok=document.getElementById('reg-ok');
+    ok.innerHTML='✅ Registration submitted!<br><b>Your ID: '+newId+'</b><br>Awaiting admin approval.';
+    ok.style.display='block';
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus"></i> Register &amp; Submit';
+    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(id=>{document.getElementById(id).value='';});
+    ['r-gender','r-course','r-slot'].forEach(id=>{document.getElementById(id).value='';});
   }
-  if (!/^\d{10}$/.test(mobile)) { showErr('reg-err', 'Enter a valid 10-digit mobile number.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('reg-err', 'Enter a valid email address.'); return; }
-  if (pass.length < 6) { showErr('reg-err', 'Password must be at least 6 characters.'); return; }
-  if (pass !== pass2)  { showErr('reg-err', 'Passwords do not match.'); return; }
-
-  var emailExists = DB.students.find(s => s.email.toLowerCase() === email)
-                 || DB.pendingRegs.find(s => s.email.toLowerCase() === email);
-  if (emailExists) { showErr('reg-err', 'This email is already registered.'); return; }
-
-  var newId = 'RI-2026-' + String(idCounter).padStart(4, '0');
-  idCounter++;
-
-  var student = {
-    id: newId, name, father, mobile, email, dob, gender, course, slot,
-    address: addr, password: pass,
-    present: 0, absent: 0,
-    feeStatus: 'Pending',
-    feeAmt: (course === 'ADCA' || course === 'ADCA+') ? 1200 : course === 'DCA' ? 1000 : 800,
-    approved: false,
-    regDate: todayStr()
-  };
-
-  var btn = document.getElementById('reg-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader"></i> Submitting...';
-
-  function onSuccess(docId) {
-    if (docId) student.fbDocId = docId;
-    DB.pendingRegs.push(student);
-    updatePendingBadge();
-    var ok = document.getElementById('reg-ok');
-    ok.innerHTML = '✅ Registration submitted!<br><b>Your ID: ' + newId + '</b><br>Awaiting admin approval. You can login after approval.';
-    ok.style.display = 'block';
-    btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-user-plus"></i> Register &amp; Submit';
-    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(id => { document.getElementById(id).value = ''; });
-    document.getElementById('r-gender').value = '';
-    document.getElementById('r-course').value = '';
-    document.getElementById('r-slot').value   = '';
-  }
-
-  if (window._fb) {
-    var fb = window._fb;
-    fb.addDoc(fb.collection(fb.db, 'pendingRegs'), student)
-      .then(function (docRef) { onSuccess(docRef.id); })
-      .catch(function (err) {
-        console.warn('Firebase save error:', err);
-        onSuccess(null); // save locally anyway
-      });
-  } else {
-    onSuccess(null);
-  }
+  if(window._fb){window._fb.addDoc(window._fb.collection(window._fb.db,'pendingRegs'),student).then(function(ref){onOk(ref.id);}).catch(function(){onOk(null);});}
+  else onOk(null);
 }
 
-// ============================================================
-// LAUNCH APP
-// ============================================================
-function launchApp() {
+/* ==================== LAUNCH ==================== */
+function launchApp(){
   setScreen('scr-app');
-  document.getElementById('mode-lbl').textContent = isAdmin ? 'Admin' : 'Student';
-  document.getElementById('admin-nav').style.display = isAdmin ? 'block' : 'none';
-
-  // Hide student-only nav items when admin
-  ['nav-s-dashboard','nav-s-attendance','nav-s-reports','nav-s-profile','nav-s-notifications'].forEach(id => {
-    var el = document.getElementById(id);
-    if (el) el.style.display = isAdmin ? 'none' : '';
-  });
-
-  initQR();
-  updatePendingBadge();
-
-  if (isAdmin) {
-    loadAdminData();
-    showSec('a-dashboard');
-  } else {
-    loadStudentData();
-    showSec('s-dashboard');
-  }
+  setText('mode-lbl',isAdmin?'Admin':'Student');
+  document.getElementById('admin-nav').style.display=isAdmin?'block':'none';
+  ['nav-s-dashboard','nav-s-attendance','nav-s-reports','nav-s-profile','nav-s-notifications'].forEach(id=>{var el=document.getElementById(id);if(el) el.style.display=isAdmin?'none':'';});
+  initQR();updatePendingBadge();
+  if(isAdmin){loadAdminData();showSec('a-dashboard');}
+  else{loadStudentAttFB();}
 }
 
-// ============================================================
-// STUDENT UI
-// ============================================================
-function loadStudentData() {
-  var s = currentUser;
-  if (!s) return;
-  var p = s.present, ab = s.absent, total = p + ab, pc = total ? Math.round(p / total * 100) : 0;
+/* ==================== ★ LOAD STUDENT ATTENDANCE FROM FIREBASE ==================== */
+function loadStudentAttFB(){
+  if(!window._fb||!currentUser){renderStudentUI();showSec('s-dashboard');return;}
+  showLoading('Loading your attendance data...');
+  var fb=window._fb;
+  var q2=fb.query(fb.collection(fb.db,'attendance_records'),fb.where('studentId','==',currentUser.id));
+  fb.getDocs(q2).then(function(snap){
+    hideLoading();
+    var rec={};
+    snap.forEach(function(d){var data=d.data();if(data.dateKey) rec[data.dateKey]=data;});
+    ATT_CACHE[currentUser.id]=rec;
+    // Sync counts
+    if(Object.keys(rec).length>0){
+      currentUser.present=presentCount(rec);
+      currentUser.absent=absentCount(rec);
+    }
+    renderStudentUI();
+    showSec('s-dashboard');
+  }).catch(function(e){
+    hideLoading();console.warn('loadStudentAtt:',e);
+    renderStudentUI();showSec('s-dashboard');
+  });
+}
 
-  setText('dash-greet',  'Good ' + greeting() + ', ' + s.name.split(' ')[0] + '! 👋');
-  setText('dash-sub',    s.course + ' • ' + s.slot + ' Batch');
-  setText('d-present',   p);
-  setText('d-absent',    ab);
-  setText('d-pct',       pc + '%');
-  setText('d-total',     total);
-  setText('circ-pct',    pc + '%');
-  document.getElementById('att-ring').setAttribute('stroke-dasharray', Math.round(pc / 100 * 220) + ' 220');
-  setText('ov-p', p + ' days');
-  setText('ov-a', ab + ' days');
-  document.getElementById('pb1').style.width = pc + '%';
-  document.getElementById('pb2').style.width = (100 - pc) + '%';
+/* ==================== ★ RENDER STUDENT UI ==================== */
+function renderStudentUI(){
+  var s=currentUser; if(!s) return;
+  var rec=ATT_CACHE[s.id]||{};
+  var p=presentCount(rec)||s.present||0;
+  var ab=absentCount(rec)||s.absent||0;
+  if(Object.keys(rec).length===0&&(s.present||0)>0){p=s.present;ab=s.absent;}
+  var total=p+ab, pc=total?Math.round(p/total*100):0;
+  var today=todayKey(), todayRec=rec[today];
 
-  setText('course-name', s.course);
-  setText('course-slot', s.slot);
-  setText('course-id',   s.id);
-  document.getElementById('fee-status-lbl').innerHTML = '<span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span>';
-
-  if (s.feeStatus !== 'Paid') {
-    document.getElementById('fee-alert-box').style.display = 'flex';
-    setText('fee-alert-txt', 'Monthly fee of ₹' + s.feeAmt + ' is due. Please pay to avoid suspension.');
+  // TODAY BANNER — KEY FIX: show if already marked
+  var banner=document.getElementById('today-banner');
+  var mainBtn=document.getElementById('att-main-btn');
+  if(todayRec&&todayRec.status==='Present'){
+    if(banner){banner.className='att-banner banner-ok';banner.innerHTML='<i class="ti ti-circle-check" style="font-size:18px"></i><div><b>Aaj ki attendance mark ho chuki hai ✅</b><br><span style="font-size:11px">'+todayRec.time+' baje mark ki gayi</span></div>';banner.style.display='flex';}
+    if(mainBtn){mainBtn.innerHTML='<i class="ti ti-check"></i> Marked ✓';mainBtn.style.opacity='0.6';mainBtn.disabled=true;}
+    showEl('att-ok');setText('att-marked-info',todayStr()+' • '+todayRec.time);
+    document.getElementById('att-status-pill').className='pill p-green';setText('att-status-pill','Present ✓');
   } else {
-    document.getElementById('fee-alert-box').style.display = 'none';
+    if(banner){banner.className='att-banner banner-warn';banner.innerHTML='<i class="ti ti-clock" style="font-size:18px"></i><div><b>Aaj ki attendance mark nahi hui</b><br><span style="font-size:11px">Abhi mark karein!</span></div>';banner.style.display='flex';}
+    if(mainBtn){mainBtn.innerHTML='<i class="ti ti-check"></i> Mark Present';mainBtn.style.opacity='';mainBtn.disabled=false;}
+    hideEl('att-ok');hideEl('att-already');
+    document.getElementById('att-status-pill').className='pill p-amber';setText('att-status-pill','Not Marked');
   }
 
-  var initl = initials(s.name);
-  setText('prof-av',   initl);
-  setText('card-av',   initl);
-  setText('prof-name', s.name);
-  setText('prof-id',   'Student ID: ' + s.id);
-  setText('card-name', s.name);
-  setText('card-course', s.course + ' • ' + s.slot);
-  setText('card-id',   'ID: ' + s.id);
+  // Stats
+  setText('d-present',p);setText('d-absent',ab);setText('d-pct',pc+'%');setText('d-total',total);
+  setText('circ-pct',pc+'%');document.getElementById('att-ring').setAttribute('stroke-dasharray',Math.round(pc/100*220)+' 220');
+  setText('ov-p',p+' days');setText('ov-a',ab+' days');
+  document.getElementById('pb1').style.width=pc+'%';document.getElementById('pb2').style.width=(100-pc)+'%';
 
-  document.getElementById('prof-details').innerHTML = [
-    ['Father Name', s.father],       ['Mobile', s.mobile],
-    ['Email',       s.email],        ['Date of Birth', s.dob || '—'],
-    ['Course',      s.course],       ['Batch Slot', s.slot],
-    ['Address',     s.address || '—', true]
-  ].map(f =>
-    '<div' + (f[2] ? ' style="grid-column:span 2"' : '') + '>' +
-    '<div style="color:var(--muted);font-size:10px;margin-bottom:2px">' + f[0] + '</div>' +
-    '<div style="font-weight:600;font-size:12px">' + f[1] + '</div></div>'
-  ).join('');
+  // Course + fee
+  setText('course-name',s.course);setText('course-slot',s.slot);setText('course-id',s.id);
+  setHTML('fee-status-lbl','<span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span>');
+  if(s.feeStatus!=='Paid'){showEl('fee-alert-box','flex');setText('fee-alert-txt','Monthly fee of ₹'+s.feeAmt+' is due.');}
+  else hideEl('fee-alert-box');
+
+  // Greeting
+  setText('dash-greet','Good '+greeting()+', '+s.name.split(' ')[0]+'! 👋');
+  setText('dash-sub',s.course+' • '+s.slot+' Batch');
+
+  // Profile
+  var initl=initials(s.name);
+  setText('prof-av',initl);setText('card-av',initl);setText('prof-name',s.name);setText('prof-id','Student ID: '+s.id);
+  setText('card-name',s.name);setText('card-course',s.course+' • '+s.slot);setText('card-id','ID: '+s.id);
+  setHTML('prof-details',[['Father',s.father],['Mobile',s.mobile],['Email',s.email],['DOB',s.dob||'—'],['Course',s.course],['Batch',s.slot],['Address',s.address||'—',true]].map(f=>'<div'+(f[2]?' style="grid-column:span 2"':'')+'><div style="color:var(--muted);font-size:10px;margin-bottom:2px">'+f[0]+'</div><div style="font-weight:600;font-size:12px">'+f[1]+'</div></div>').join(''));
 
   // Reports
-  setText('r-present', p);
-  setText('r-pct',     pc + '%');
-  setText('r-total',   p);
-  setText('r-absent',  ab);
-  setText('r-may-pct', pc + '%');
-  document.getElementById('r-may-bar').style.width = pc + '%';
+  setText('r-present',p);setText('r-absent',ab);setText('r-pct',pc+'%');setText('r-total',total);
+  setHTML('report-bars',buildReportBars(rec,pc));
+
+  // Calendar + log
+  buildCalendar(rec);
+  buildAttLog(rec);
 
   // Notifications
-  var html = DB.notifications.map(notifCard).join('');
-  var fallback = '<div style="color:var(--muted);font-size:12px;padding:10px">No notifications</div>';
-  setText2('dash-notifs',          html || fallback);
-  setText2('student-notifs-list',  html || fallback);
+  var nh=DB.notifications.map(notifCard).join('');
+  setHTML('dash-notifs',nh||'<div style="color:var(--muted);font-size:12px;padding:8px">No notifications</div>');
+  setHTML('student-notifs-list',nh||'<div style="color:var(--muted);font-size:12px;padding:8px">No notifications</div>');
 }
 
-function notifCard(n) {
-  var bg = { amber:'#fef3c7', blue:'#dbeafe', green:'#d1fae5', red:'#fee2e2' };
-  var fg = { amber:'var(--amber)', blue:'var(--blue)', green:'var(--green)', red:'var(--red)' };
-  return '<div class="notif-item">' +
-    '<div class="notif-ico" style="background:' + (bg[n.type] || '#f3f4f6') + ';color:' + (fg[n.type] || 'var(--muted)') + '">' +
-    '<i class="ti ' + n.icon + '"></i></div>' +
-    '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">' + n.title + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + n.msg + '</div></div>' +
-    '<div style="font-size:10px;color:var(--muted);white-space:nowrap;margin-left:8px">' + n.time + '</div></div>';
+function notifCard(n){
+  var bg={amber:'#fef3c7',blue:'#dbeafe',green:'#d1fae5',red:'#fee2e2'};
+  var fg={amber:'var(--amber)',blue:'var(--blue)',green:'var(--green)',red:'var(--red)'};
+  return '<div class="notif-item"><div class="notif-ico" style="background:'+(bg[n.type]||'#f3f4f6')+';color:'+(fg[n.type]||'var(--muted)')+'"><i class="ti '+n.icon+'"></i></div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+n.title+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+n.msg+'</div></div><div style="font-size:10px;color:var(--muted);white-space:nowrap;margin-left:8px">'+n.time+'</div></div>';
 }
 
-function setText(id, val)  { var el = document.getElementById(id); if (el) el.textContent = val; }
-function setText2(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
-
-// ============================================================
-// ADMIN UI
-// ============================================================
-function loadAdminData() {
-  // Load pending from Firebase, then also load approved students (to catch newly approved ones)
-  var promises = [loadPendingFromFirebase(), loadApprovedFromFirebasePromise()];
-  Promise.all(promises).then(function () {
-    renderAdminStats();
-    renderStudentTable(DB.students);
-    renderFeeTable(DB.students);
-    renderAdminAtt(DB.students);
-    renderRecentRegs();
+function buildReportBars(rec,overallPct){
+  var months=[{n:'January',y:2026,m:0},{n:'February',y:2026,m:1},{n:'March',y:2026,m:2},{n:'April',y:2026,m:3},{n:'May',y:2026,m:4}];
+  var now=new Date();
+  var out='';
+  months.forEach(function(mo){
+    var keys=Object.keys(rec||{}).filter(function(k){var d=new Date(k);return d.getFullYear()===mo.y&&d.getMonth()===mo.m;});
+    var p=keys.filter(k=>(rec[k].status||'Present')==='Present').length;
+    var t=keys.length;
+    var pct=t?Math.round(p/t*100):0;
+    var isNow=(mo.m===now.getMonth()&&mo.y===now.getFullYear());
+    var disp=t>0?pct+'%':(isNow&&overallPct>0?overallPct+'%':'—');
+    var w=t>0?pct:(isNow?overallPct:0);
+    out+='<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>'+mo.n+(isNow?' (so far)':'')+'</span><span style="font-weight:600">'+disp+'</span></div><div class="pbar"><div class="pbar-fill" style="width:'+w+'%"></div></div></div>';
   });
+  return out||'<div style="color:var(--muted);font-size:12px">No records yet. Mark attendance to see reports.</div>';
 }
 
-function loadPendingFromFirebase() {
-  if (!window._fb) return Promise.resolve();
-  showLoading('Loading pending registrations...');
-  var fb = window._fb;
-  return fb.getDocs(fb.collection(fb.db, 'pendingRegs'))
-    .then(function (snap) {
-      DB.pendingRegs = [];
-      snap.forEach(function (d) {
-        var data = d.data();
-        data.fbDocId = d.id;
-        if (!DB.students.find(s => s.email && data.email && s.email.toLowerCase() === data.email.toLowerCase())) {
-          DB.pendingRegs.push(data);
-        }
-      });
-      updatePendingBadge();
-      hideLoading();
-    })
-    .catch(function (e) { hideLoading(); console.warn(e); });
+function buildCalendar(rec){
+  var now=new Date(), year=now.getFullYear(), month=now.getMonth(), todayD=now.getDate();
+  var firstDay=new Date(year,month,1).getDay(), daysInMonth=new Date(year,month+1,0).getDate();
+  var h='<div class="cal-hd">S</div><div class="cal-hd">M</div><div class="cal-hd">T</div><div class="cal-hd">W</div><div class="cal-hd">T</div><div class="cal-hd">F</div><div class="cal-hd">S</div>';
+  for(var i=0;i<firstDay;i++) h+='<div class="cal-cell cal-empty">.</div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var key=year+'-'+pad(month+1)+'-'+pad(d);
+    var r=rec[key];
+    var cls='cal-cell';
+    if(d===todayD){ cls+=r&&r.status==='Present'?' cal-today-present':' cal-today'; }
+    else if(r){ cls+=r.status==='Present'?' cal-present':' cal-absent'; }
+    else if(d<todayD){ cls+=' cal-absent'; } // missed days = absent
+    else { cls+=' cal-future'; }
+    h+='<div class="'+cls+'">'+d+'</div>';
+  }
+  setHTML('att-calendar',h);
+  setText('cal-title',now.toLocaleDateString('en-IN',{month:'long',year:'numeric'}));
 }
 
-function loadApprovedFromFirebasePromise() {
-  if (!window._fb) return Promise.resolve();
-  var fb = window._fb;
-  return fb.getDocs(fb.collection(fb.db, 'approvedStudents'))
-    .then(function (snap) {
-      snap.forEach(function (d) {
-        var data = d.data();
-        data.fbDocId = d.id;
-        data.approved = true;
-        if (!DB.students.find(s => s.email && data.email && s.email.toLowerCase() === data.email.toLowerCase())) {
-          DB.students.push(data);
-        }
-      });
-    })
-    .catch(function (e) { console.warn('approvedStudents load error:', e); });
+function buildAttLog(rec){
+  var keys=Object.keys(rec||{}).sort().reverse().slice(0,10);
+  if(keys.length===0){setHTML('att-log-body','<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:14px">Koi attendance record nahi hai abhi tak</td></tr>');return;}
+  var html=keys.map(function(k){
+    var r=rec[k], d=new Date(k);
+    var status=r.status||'Present';
+    return '<tr><td>'+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+'</td><td>'+d.toLocaleDateString('en-IN',{weekday:'short'})+'</td><td>'+(r.time||'—')+'</td><td><span class="pill '+(status==='Present'?'p-green':'p-red')+'">'+status+'</span></td><td><span class="pill p-blue">'+(r.method||'QR')+'</span></td></tr>';
+  }).join('');
+  setHTML('att-log-body',html);
 }
 
-function renderAdminStats() {
-  setText('ad-total',       DB.students.length);
-  setText('ad-today',       DB.students.filter(s => pct(s) >= 80).length);
-  setText('ad-pending-fee', DB.students.filter(s => s.feeStatus !== 'Paid').length);
-  setText('ad-new',         DB.pendingRegs.length);
+/* ==================== ★ MARK ATTENDANCE ==================== */
+function markAttendance(){
+  var rec=ATT_CACHE[currentUser.id]||{};
+  if(rec[todayKey()]&&rec[todayKey()].status==='Present'){alert('Aaj ki attendance pehle se mark ho chuki hai!');return;}
+  saveAtt();
+}
+function markQR(){
+  var rec=ATT_CACHE[currentUser.id]||{};
+  var todayRec=rec[todayKey()];
+  if(todayRec&&todayRec.status==='Present'){
+    showEl('att-already');hideEl('att-ok');
+    setText('att-already-time',todayStr()+' • '+todayRec.time);
+    return;
+  }
+  saveAtt();
 }
 
-function renderRecentRegs() {
-  var list = DB.pendingRegs.slice().reverse().slice(0, 5);
-  var html = list.map(s =>
-    '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:7px;flex-wrap:wrap">' +
-    '<div class="av" style="width:36px;height:36px;font-size:13px;background:var(--grad)">' + initials(s.name) + '</div>' +
-    '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">' + s.name + '</div>' +
-    '<div style="font-size:11px;color:var(--muted)">' + s.course + ' • ' + s.slot + '</div>' +
-    '<div style="font-size:10px;color:var(--blue)">' + s.email + '</div></div>' +
-    '<div style="display:flex;gap:6px;flex-shrink:0">' +
-    '<button class="btn-pri" style="font-size:10px;padding:5px 10px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\'' + s.email + '\')">' +
-    '<i class="ti ti-check"></i> Approve</button>' +
-    '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\'' + s.email + '\')">' +
-    '<i class="ti ti-x"></i> Reject</button></div></div>'
-  ).join('');
-  setText2('recent-regs-list', html || '<div style="color:var(--muted);font-size:12px;padding:8px">No pending registrations</div>');
-}
+function saveAtt(){
+  var now=new Date();
+  var timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var key=todayKey();
+  var record={status:'Present',time:timeStr,method:'QR Scan',date:todayStr(),studentId:currentUser.id,studentName:currentUser.name,course:currentUser.course,slot:currentUser.slot};
 
-function renderStudentTable(list) {
-  var html = list.map((s, i) =>
-    '<tr>' +
-    '<td><div style="display:flex;align-items:center;gap:8px">' +
-    '<div class="av" style="width:28px;height:28px;font-size:10px;background:' + avatarColor(i) + '">' + initials(s.name) + '</div>' +
-    '<div><div style="font-size:12px;font-weight:600">' + s.name + '</div><div style="font-size:10px;color:var(--muted)">' + s.id + '</div></div></div></td>' +
-    '<td><span class="pill ' + courseColor(s.course) + '">' + s.course + '</span></td>' +
-    '<td class="hide-mob" style="font-size:12px">' + s.slot + '</td>' +
-    '<td class="hide-mob" style="font-size:12px">' + s.mobile + '</td>' +
-    '<td style="font-size:12px;font-weight:700;color:' + (pct(s) >= 80 ? 'var(--green)' : pct(s) >= 60 ? 'var(--amber)' : 'var(--red)') + '">' + pct(s) + '%</td>' +
-    '<td><span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span></td>' +
-    '<td><button class="btn-out btn-sm" onclick="viewStudent(\'' + s.id + '\')">View</button></td></tr>'
-  ).join('');
-  setText2('student-tbody', html || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No students found</td></tr>');
-}
+  // ★ Update cache immediately (no flicker on refresh)
+  if(!ATT_CACHE[currentUser.id]) ATT_CACHE[currentUser.id]={};
+  ATT_CACHE[currentUser.id][key]=record;
+  currentUser.present=(currentUser.present||0)+1;
 
-function filterStudents() {
-  var q = (document.getElementById('search-inp').value || '').toLowerCase();
-  var c = document.getElementById('filter-course').value;
-  var list = DB.students.filter(s =>
-    (!q || s.name.toLowerCase().includes(q) || (s.email && s.email.toLowerCase().includes(q)) || s.id.toLowerCase().includes(q)) &&
-    (!c || s.course === c)
-  );
-  renderStudentTable(list);
-}
+  // Show success UI
+  showEl('att-ok');hideEl('att-already');
+  setText('att-marked-info',todayStr()+' • '+timeStr);
+  document.getElementById('att-status-pill').className='pill p-green';setText('att-status-pill','Present ✓');
+  var btn=document.getElementById('att-main-btn');
+  if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓';btn.style.opacity='0.6';btn.disabled=true;}
+  buildCalendar(ATT_CACHE[currentUser.id]);
+  renderStudentUI();
 
-function renderFeeTable(list) {
-  var html = list.map(s =>
-    '<tr>' +
-    '<td style="font-size:12px;font-weight:600">' + s.name + '</td>' +
-    '<td><span class="pill ' + courseColor(s.course) + '">' + s.course + '</span></td>' +
-    '<td style="font-size:12px">₹' + s.feeAmt + '</td>' +
-    '<td class="hide-mob" style="font-size:12px">15 May</td>' +
-    '<td><span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span></td>' +
-    '<td>' + (s.feeStatus !== 'Paid' ?
-      '<button class="btn-out btn-sm" onclick="sendRemind(\'' + s.name + '\')">Remind</button>' :
-      '<span style="font-size:11px;color:var(--green)">✓ Done</span>') + '</td></tr>'
-  ).join('');
-  setText2('fee-tbody', html);
-  setText('fee-pending-amt', '₹' + list.filter(s => s.feeStatus !== 'Paid').reduce((a, s) => a + (s.feeAmt || 0), 0));
-  setText('fee-due-count',   list.filter(s => s.feeStatus === 'Pending').length);
-  setText('fee-overdue-count', list.filter(s => s.feeStatus === 'Overdue').length);
-}
-
-function renderAdminAtt(list) {
-  var today = todayStr();
-  var html = list.map(s =>
-    '<tr>' +
-    '<td style="font-size:12px;font-weight:600">' + s.name + '</td>' +
-    '<td><span class="pill ' + courseColor(s.course) + '">' + s.course + '</span></td>' +
-    '<td class="hide-mob" style="font-size:12px">' + s.slot + '</td>' +
-    '<td style="font-size:12px">' + today + '</td>' +
-    '<td style="font-size:12px">' + (pct(s) >= 80 ? s.slot.split(' ')[0] + ' AM' : '—') + '</td>' +
-    '<td><span class="pill ' + (pct(s) >= 80 ? 'p-green' : 'p-red') + '">' + (pct(s) >= 80 ? 'Present' : 'Absent') + '</span></td></tr>'
-  ).join('');
-  setText2('admin-att-body', html);
-}
-
-function renderPendingList() {
-  loadPendingFromFirebase().then(function () { _renderPendingUI(); });
-}
-
-function _renderPendingUI() {
-  var list = DB.pendingRegs;
-  document.getElementById('no-pending').style.display    = list.length === 0 ? 'block' : 'none';
-  setText2('pending-list', list.map(s =>
-    '<div class="card" style="margin-bottom:10px">' +
-    '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">' +
-    '<div style="display:flex;align-items:center;gap:10px">' +
-    '<div class="av" style="width:40px;height:40px;font-size:14px;border-radius:12px;background:var(--grad)">' + initials(s.name) + '</div>' +
-    '<div><div style="font-size:13px;font-weight:700">' + s.name + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + s.email + ' • ' + s.mobile + '</div>' +
-    '<div style="font-size:11px;color:var(--muted)">' + s.course + ' • ' + s.slot + '</div>' +
-    '<div style="font-size:10px;color:var(--blue);margin-top:2px">ID: ' + s.id + ' | Registered: ' + (s.regDate || '—') + '</div></div></div>' +
-    '<div style="display:flex;gap:7px;flex-shrink:0">' +
-    '<button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\'' + s.email + '\')">' +
-    '<i class="ti ti-check"></i> Approve</button>' +
-    '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\'' + s.email + '\')">' +
-    '<i class="ti ti-x"></i> Reject</button></div></div></div>'
-  ).join(''));
-}
-
-// ============================================================
-// APPROVE / REJECT
-// ============================================================
-function approveStudent(email) {
-  var idx = DB.pendingRegs.findIndex(s => s.email === email);
-  if (idx === -1) return;
-  var s = Object.assign({}, DB.pendingRegs[idx]);
-  var fbDocId = s.fbDocId;
-  s.approved = true;
-
-  DB.students.push(s);
-  DB.pendingRegs.splice(idx, 1);
-
-  if (window._fb && fbDocId) {
-    var fb = window._fb;
-    // Move from pendingRegs → approvedStudents in Firebase
-    fb.addDoc(fb.collection(fb.db, 'approvedStudents'), s)
-      .then(function () {
-        fb.deleteDoc(fb.doc(fb.db, 'pendingRegs', fbDocId)).catch(console.warn);
+  // ★ Save to Firebase Firestore — persists across refresh/login
+  if(window._fb){
+    var fb=window._fb;
+    fb.setDoc(fb.doc(fb.db,'attendance_records',currentUser.id+'_'+key),Object.assign({},record,{studentId:currentUser.id,dateKey:key}))
+      .then(function(){
+        console.log('✅ Attendance saved to Firebase');
+        // Update student total counts in approvedStudents doc
+        syncStudentCounts(currentUser.id,currentUser.email);
       })
-      .catch(console.warn);
+      .catch(function(e){console.warn('Attendance save error:',e);});
   }
-
-  loadAdminData();
-  alert('✅ Student "' + s.name + '" approved!\n\nThey can now login with:\nEmail: ' + s.email + '\nPassword: (their registered password)');
 }
 
-function rejectStudent(email) {
-  var s = DB.pendingRegs.find(s => s.email === email);
-  if (!s) return;
-  if (!confirm('Reject registration for ' + s.name + ' (' + email + ')?')) return;
-
-  var idx = DB.pendingRegs.findIndex(s => s.email === email);
-  if (window._fb && s.fbDocId) {
-    window._fb.deleteDoc(window._fb.doc(window._fb.db, 'pendingRegs', s.fbDocId)).catch(console.warn);
-  }
-  DB.pendingRegs.splice(idx, 1);
-  loadAdminData();
-  alert('Registration for "' + s.name + '" has been rejected and removed.');
+function syncStudentCounts(studentId,email){
+  if(!window._fb) return;
+  var fb=window._fb, rec=ATT_CACHE[studentId]||{};
+  var p=presentCount(rec), ab=absentCount(rec);
+  fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+    snap.forEach(function(d){
+      if(d.data().email&&d.data().email.toLowerCase()===email.toLowerCase())
+        fb.updateDoc(fb.doc(fb.db,'approvedStudents',d.id),{present:p,absent:ab}).catch(console.warn);
+    });
+  }).catch(console.warn);
 }
 
-// ============================================================
-// STUDENT DETAIL MODAL
-// ============================================================
-function viewStudent(id) {
-  var s = DB.students.find(s => s.id === id);
-  if (!s) return;
-  var pc = pct(s);
-  setText2('modal-content',
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
-    '<div class="av" style="width:48px;height:48px;font-size:16px;border-radius:13px;background:var(--grad)">' + initials(s.name) + '</div>' +
-    '<div><div style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:15px">' + s.name + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + s.id + ' • ' + s.course + ' • ' + s.slot + '</div></div></div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:12px;margin-bottom:14px">' +
-    '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">' + (s.mobile || '—') + '</div></div>' +
-    '<div><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;font-size:11px;word-break:break-all">' + s.email + '</div></div>' +
-    '<div><div style="color:var(--muted);font-size:10px">Attendance</div>' +
-    '<div style="font-weight:700;color:' + (pc >= 80 ? 'var(--green)' : pc >= 60 ? 'var(--amber)' : 'var(--red)') + '">' + pc + '% (' + s.present + ' Present / ' + s.absent + ' Absent)</div></div>' +
-    '<div><div style="color:var(--muted);font-size:10px">Fee Status</div><div><span class="pill ' + feeColor(s.feeStatus) + '">' + s.feeStatus + '</span></div></div>' +
-    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Father Name</div><div style="font-weight:600">' + (s.father || '—') + '</div></div>' +
-    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Address</div><div style="font-weight:600">' + (s.address || '—') + '</div></div>' +
-    '</div>' +
-    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\'' + s.name + '\')"><i class="ti ti-send"></i> Send Reminder</button>' +
+/* ==================== ADMIN LOAD ==================== */
+function loadAdminData(){
+  showLoading('Loading admin data...');
+  Promise.all([loadPendingFB(),loadApprovedFB(),loadAllAttFB()]).then(function(){
+    hideLoading();renderAdminStats();renderStudentTable(DB.students);renderFeeTable(DB.students);renderAdminAttTable();renderRecentRegs();
+  }).catch(function(e){hideLoading();console.warn(e);renderAdminStats();renderStudentTable(DB.students);});
+}
+
+function loadPendingFB(){
+  if(!window._fb) return Promise.resolve();
+  return window._fb.getDocs(window._fb.collection(window._fb.db,'pendingRegs')).then(function(snap){
+    DB.pendingRegs=[];
+    snap.forEach(function(d){var data=d.data();data.fbDocId=d.id;if(!DB.students.find(s=>s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase())) DB.pendingRegs.push(data);});
+    updatePendingBadge();
+  }).catch(console.warn);
+}
+
+function loadApprovedFB(){
+  if(!window._fb) return Promise.resolve();
+  return window._fb.getDocs(window._fb.collection(window._fb.db,'approvedStudents')).then(function(snap){
+    snap.forEach(function(d){var data=d.data();data.fbDocId=d.id;data.approved=true;if(!DB.students.find(s=>s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase())) DB.students.push(data);});
+  }).catch(console.warn);
+}
+
+// ★ Load attendance for ALL students (admin view — real present/absent counts)
+function loadAllAttFB(){
+  if(!window._fb) return Promise.resolve();
+  var fb=window._fb;
+  var promises=DB.students.map(function(s){
+    var qa=window._fb.query(fb.collection(fb.db,'attendance_records'),fb.where('studentId','==',s.id));
+      return fb.getDocs(qa).then(function(snap){
+      var rec={};
+      snap.forEach(function(d){var dd=d.data();if(dd.dateKey) rec[dd.dateKey]=dd; else rec[d.id]=dd;});
+      ATT_CACHE[s.id]=rec;
+      if(Object.keys(rec).length>0){s.present=presentCount(rec);s.absent=absentCount(rec);}
+    }).catch(function(){});
+  });
+  return Promise.all(promises);
+}
+
+function renderAdminStats(){
+  setText('ad-total',DB.students.length);
+  var todayPresent=DB.students.filter(function(s){var r=ATT_CACHE[s.id]||{};return r[todayKey()]&&r[todayKey()].status==='Present';}).length;
+  setText('ad-today',todayPresent);
+  setText('ad-pending-fee',DB.students.filter(s=>s.feeStatus!=='Paid').length);
+  setText('ad-new',DB.pendingRegs.length);
+}
+
+function renderRecentRegs(){
+  var list=DB.pendingRegs.slice().reverse().slice(0,5);
+  setHTML('recent-regs-list',list.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:7px;flex-wrap:wrap"><div class="av" style="width:36px;height:36px;font-size:13px;background:var(--grad)">'+initials(s.name)+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+s.name+'</div><div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div><div style="font-size:10px;color:var(--blue)">'+s.email+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn-pri" style="font-size:10px;padding:5px 10px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')"><i class="ti ti-check"></i> Approve</button><button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')"><i class="ti ti-x"></i> Reject</button></div></div>').join('')||'<div style="color:var(--muted);font-size:12px;padding:8px">No pending registrations</div>');
+}
+
+// ★ Admin student table — real Present/Absent columns
+function renderStudentTable(list){
+  setHTML('student-tbody',list.map((s,i)=>{
+    var p=getP(s),ab=getAb(s),pc=getPct(s);
+    return '<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:28px;height:28px;font-size:10px;background:'+avatarColor(i)+'">'+initials(s.name)+'</div><div><div style="font-size:12px;font-weight:600">'+s.name+'</div><div style="font-size:10px;color:var(--muted)">'+s.id+'</div></div></div></td>'+
+      '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
+      '<td class="hide-mob" style="font-size:12px">'+s.slot+'</td>'+
+      '<td class="hide-mob" style="font-size:12px">'+s.mobile+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:var(--green)">'+p+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
+      '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>'+
+      '<td><button class="btn-out btn-sm" onclick="viewStudent(\''+s.id+'\')">View</button></td></tr>';
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No students</td></tr>');
+}
+
+function filterStudents(){
+  var q=(document.getElementById('search-inp').value||'').toLowerCase();
+  var c=document.getElementById('filter-course').value;
+  renderStudentTable(DB.students.filter(s=>(!q||(s.name.toLowerCase().includes(q)||s.email.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)))&&(!c||s.course===c)));
+}
+
+function renderFeeTable(list){
+  setHTML('fee-tbody',list.map(s=>'<tr><td style="font-size:12px;font-weight:600">'+s.name+'</td><td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td><td style="font-size:12px">₹'+s.feeAmt+'</td><td class="hide-mob" style="font-size:12px">15 May</td><td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td><td>'+(s.feeStatus!=='Paid'?'<button class="btn-out btn-sm" onclick="sendRemind(\''+s.name+'\')">Remind</button>':'<span style="color:var(--green);font-size:11px">✓ Done</span>')+'</td></tr>').join(''));
+  setText('fee-pending-amt','₹'+list.filter(s=>s.feeStatus!=='Paid').reduce((a,s)=>a+(s.feeAmt||0),0));
+  setText('fee-due-count',list.filter(s=>s.feeStatus==='Pending').length);
+  setText('fee-overdue-count',list.filter(s=>s.feeStatus==='Overdue').length);
+}
+
+// ★ Admin Attendance Records — total present, absent, today status per student
+function renderAdminAttTable(){
+  var cf=(document.getElementById('att-filter-course')||{}).value||'';
+  var sf=(document.getElementById('att-filter-status')||{}).value||'';
+  var today=todayKey();
+  var list=DB.students.filter(s=>!cf||s.course===cf);
+  if(sf){
+    list=list.filter(function(s){var r=ATT_CACHE[s.id]||{};var ts=(r[today]&&r[today].status)||'Absent';return ts===sf;});
+  }
+  var html=list.map(function(s){
+    var rec=ATT_CACHE[s.id]||{};
+    var p=getP(s),ab=getAb(s),pc=getPct(s);
+    var todayRec=rec[today];
+    var todayStatus=todayRec?todayRec.status:'—';
+    var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-gray';
+    return '<tr>'+
+      '<td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="width:26px;height:26px;font-size:9px;background:var(--grad)">'+initials(s.name)+'</div><div><div style="font-size:12px;font-weight:600">'+s.name+'</div><div style="font-size:10px;color:var(--muted)">'+s.id+'</div></div></div></td>'+
+      '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
+      '<td class="hide-mob" style="font-size:12px">'+s.slot+'</td>'+
+      '<td style="font-size:14px;font-weight:800;color:var(--green)">'+p+'<span style="font-size:10px;font-weight:400;color:var(--muted)"> days</span></td>'+
+      '<td style="font-size:14px;font-weight:800;color:var(--red)">'+ab+'<span style="font-size:10px;font-weight:400;color:var(--muted)"> days</span></td>'+
+      '<td style="font-size:14px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
+      '<td><span class="pill '+todayCls+'">'+todayStatus+(todayRec&&todayRec.time?' '+todayRec.time:'')+'</span></td></tr>';
+  }).join('');
+  setHTML('admin-att-body',html||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No records</td></tr>');
+}
+
+/* ==================== APPROVE / REJECT ==================== */
+function renderPendingList(){ loadPendingFB().then(function(){_renderPendingUI();}); }
+function _renderPendingUI(){
+  var list=DB.pendingRegs;
+  document.getElementById('no-pending').style.display=list.length===0?'block':'none';
+  setHTML('pending-list',list.map(s=>'<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><div class="av" style="width:40px;height:40px;font-size:14px;border-radius:12px;background:var(--grad)">'+initials(s.name)+'</div><div><div style="font-size:13px;font-weight:700">'+s.name+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+s.email+' • '+s.mobile+'</div><div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div><div style="font-size:10px;color:var(--blue);margin-top:2px">ID: '+s.id+' | '+s.regDate+'</div></div></div><div style="display:flex;gap:7px;flex-shrink:0"><button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')"><i class="ti ti-check"></i> Approve</button><button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')"><i class="ti ti-x"></i> Reject</button></div></div></div>').join(''));
+}
+
+function approveStudent(email){
+  var idx=DB.pendingRegs.findIndex(s=>s.email===email); if(idx===-1) return;
+  var s=Object.assign({},DB.pendingRegs[idx]); var fbDocId=s.fbDocId; s.approved=true;
+  DB.students.push(s);DB.pendingRegs.splice(idx,1);
+  if(window._fb&&fbDocId){var fb=window._fb;fb.addDoc(fb.collection(fb.db,'approvedStudents'),s).then(function(){fb.deleteDoc(fb.doc(fb.db,'pendingRegs',fbDocId)).catch(console.warn);}).catch(console.warn);}
+  loadAdminData();alert('✅ "'+s.name+'" approved!\nLogin: '+s.email);
+}
+function rejectStudent(email){
+  var s=DB.pendingRegs.find(s=>s.email===email); if(!s) return;
+  if(!confirm('Reject registration for '+s.name+'?')) return;
+  var idx=DB.pendingRegs.findIndex(s=>s.email===email);
+  if(window._fb&&s.fbDocId) window._fb.deleteDoc(window._fb.doc(window._fb.db,'pendingRegs',s.fbDocId)).catch(console.warn);
+  DB.pendingRegs.splice(idx,1);loadAdminData();
+  alert('"'+s.name+'" ki registration reject kar di gayi.');
+}
+
+/* ==================== STUDENT DETAIL MODAL (Admin) ==================== */
+function viewStudent(id){
+  var s=DB.students.find(s=>s.id===id); if(!s) return;
+  var rec=ATT_CACHE[s.id]||{};
+  var p=getP(s),ab=getAb(s),pc=getPct(s);
+  var today=todayKey(), todayRec=rec[today];
+  var todayStatus=todayRec?todayRec.status:'Not Marked';
+  var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-amber';
+
+  // Last 7 days
+  var last7='';
+  for(var i=6;i>=0;i--){
+    var d=new Date();d.setDate(d.getDate()-i);
+    var k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    var r=rec[k];
+    var cls=r?(r.status==='Present'?'p-green':'p-red'):'p-gray';
+    last7+='<div style="text-align:center"><div style="font-size:9px;color:var(--muted);margin-bottom:3px">'+d.toLocaleDateString('en-IN',{weekday:'short'})+'</div><span class="pill '+cls+'" style="font-size:9px;padding:2px 5px">'+(r?r.status:'—')+'</span></div>';
+  }
+
+  setHTML('modal-content',
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
+    '<div class="av" style="width:48px;height:48px;font-size:16px;border-radius:13px;background:var(--grad)">'+initials(s.name)+'</div>'+
+    '<div><div style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:15px">'+s.name+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+s.id+' • '+s.course+' • '+s.slot+'</div></div></div>'+
+    // Big stats
+    '<div class="g3" style="margin-bottom:12px">'+
+    '<div style="background:#d1fae5;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#065f46">'+p+'</div><div style="font-size:10px;color:#047857;font-weight:700;margin-top:2px">PRESENT</div></div>'+
+    '<div style="background:#fee2e2;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#991b1b">'+ab+'</div><div style="font-size:10px;color:#b91c1c;font-weight:700;margin-top:2px">ABSENT</div></div>'+
+    '<div style="background:#dbeafe;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#1e40af">'+pc+'%</div><div style="font-size:10px;color:#1d4ed8;font-weight:700;margin-top:2px">ATT %</div></div>'+
+    '</div>'+
+    // Progress bar
+    '<div style="margin-bottom:12px"><div class="pbar" style="height:8px"><div class="pbar-fill" style="width:'+pc+'%;background:'+(pc>=80?'linear-gradient(90deg,#10b981,#34d399)':pc>=60?'linear-gradient(90deg,#f59e0b,#fbbf24)':'linear-gradient(90deg,#ef4444,#f87171)')+'"></div></div></div>'+
+    // Today status
+    '<div style="background:#f8fafc;border-radius:9px;padding:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'+
+    '<div style="font-size:12px;font-weight:600">Aaj ki Attendance</div>'+
+    '<span class="pill '+todayCls+'">'+todayStatus+(todayRec&&todayRec.time?' • '+todayRec.time:'')+'</span></div>'+
+    // Last 7 days
+    '<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.5px">LAST 7 DAYS</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+last7+'</div></div>'+
+    // Info
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:14px">'+
+    '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">'+(s.mobile||'—')+'</div></div>'+
+    '<div><div style="color:var(--muted);font-size:10px">Fee Status</div><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></div>'+
+    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;word-break:break-all">'+s.email+'</div></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\''+s.name+'\')"><i class="ti ti-send"></i> Fee Reminder</button>'+
     '<button class="btn-out btn-sm" onclick="closeModal()"><i class="ti ti-x"></i> Close</button></div>'
   );
-  document.getElementById('student-modal').style.display = 'block';
+  showEl('student-modal');
 }
-function closeModal() { document.getElementById('student-modal').style.display = 'none'; }
+function closeModal(){ hideEl('student-modal'); }
 
-// ============================================================
-// NOTIFICATIONS
-// ============================================================
-function sendRemind(name) { alert('Fee reminder sent to ' + name + '!'); }
-function sendAllReminders() { alert('Fee reminders sent to all students with pending/overdue fees!'); }
-
-function sendNotif() {
-  var t = (document.getElementById('n-title').value || '').trim();
-  var m = (document.getElementById('n-msg').value   || '').trim();
-  if (!t || !m) { alert('Please fill both title and message.'); return; }
-  DB.notifications.unshift({ type:'blue', icon:'ti-speakerphone', title:t, msg:m, time:'Just now' });
-  var sent = document.getElementById('notif-sent');
-  sent.style.display = 'block';
-  setTimeout(function () { sent.style.display = 'none'; }, 3000);
-  document.getElementById('n-title').value = '';
-  document.getElementById('n-msg').value   = '';
+/* ==================== NOTIFICATIONS / FEES ==================== */
+function sendRemind(name){ alert('Fee reminder sent to '+name+'!'); }
+function sendAllReminders(){ alert('Reminders sent to all pending/overdue students!'); }
+function sendNotif(){
+  var t=(document.getElementById('n-title').value||'').trim(), m=(document.getElementById('n-msg').value||'').trim();
+  if(!t||!m){alert('Please fill title and message.');return;}
+  DB.notifications.unshift({type:'blue',icon:'ti-speakerphone',title:t,msg:m,time:'Just now'});
+  showEl('notif-sent');setTimeout(function(){hideEl('notif-sent');},3000);
+  document.getElementById('n-title').value='';document.getElementById('n-msg').value='';
 }
 
-// ============================================================
-// ATTENDANCE
-// ============================================================
-function markAttendance() {
-  if (attMarkedToday) { alert('Attendance already marked for today!'); return; }
-  doMarkAtt();
-}
-function markQR() {
-  if (attMarkedToday) { document.getElementById('att-ok').style.display = 'block'; return; }
-  doMarkAtt();
-}
-function doMarkAtt() {
-  attMarkedToday = true;
-  if (currentUser) currentUser.present++;
-  var now = new Date();
-  var timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-  document.getElementById('att-ok').style.display = 'block';
-  setText('att-marked-info', todayStr() + ' • ' + timeStr);
-  document.getElementById('att-status-pill').className = 'pill p-green';
-  setText('att-status-pill', 'Present ✓');
-  var btn = document.getElementById('att-main-btn');
-  btn.innerHTML = '<i class="ti ti-check"></i> Marked ✓';
-  btn.style.opacity = '0.6';
-  btn.disabled = true;
-  var cal = document.getElementById('cal-today');
-  if (cal) cal.className = 'cal-cell cal-present';
-  loadStudentData();
-}
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function showSec(id) {
-  document.querySelectorAll('[data-sec]').forEach(s => s.classList.remove('active'));
-  var el = document.querySelector('[data-sec="' + id + '"]');
-  if (el) el.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  var nav = document.getElementById('nav-' + id);
-  if (nav) nav.classList.add('active');
-
-  if (id === 'a-pending')    renderPendingList();
-  if (id === 'a-students')   filterStudents();
-  if (id === 'a-fees')       renderFeeTable(DB.students);
-  if (id === 'a-attendance') renderAdminAtt(DB.students);
-  if (id === 'a-dashboard')  loadAdminData();
+/* ==================== NAVIGATION ==================== */
+function showSec(id){
+  document.querySelectorAll('[data-sec]').forEach(s=>s.classList.remove('active'));
+  var el=document.querySelector('[data-sec="'+id+'"]'); if(el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  var nav=document.getElementById('nav-'+id); if(nav) nav.classList.add('active');
+  if(id==='a-pending')    renderPendingList();
+  if(id==='a-students')   loadAllAttFB().then(function(){filterStudents();});
+  if(id==='a-fees')       renderFeeTable(DB.students);
+  if(id==='a-attendance') loadAllAttFB().then(function(){renderAdminAttTable();});
+  if(id==='a-dashboard')  loadAdminData();
+  if(id==='s-attendance') { buildCalendar(ATT_CACHE[currentUser&&currentUser.id]||{}); buildAttLog(ATT_CACHE[currentUser&&currentUser.id]||{}); }
+  if(id==='s-reports')    renderStudentUI();
+  if(id==='s-dashboard')  renderStudentUI();
 }
 </script>
 </body>
