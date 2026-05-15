@@ -532,8 +532,8 @@ function initials(name){ return name?name.trim().split(/\s+/).map(w=>w[0]).join(
 function avatarColor(i){ var c=['linear-gradient(135deg,#1a73e8,#4f98f0)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#6c47ff,#a78bfa)','linear-gradient(135deg,#ef4444,#f87171)']; return c[i%c.length]; }
 function presentCount(rec){ return Object.keys(rec||{}).filter(k=>(rec[k].status||'Present')==='Present').length; }
 function absentCount(rec){ return Object.keys(rec||{}).filter(k=>(rec[k].status||'Present')==='Absent').length; }
-function getP(s){ var r=ATT_CACHE[s.id]; return (r&&Object.keys(r).length>0)?presentCount(r):(s.present||0); }
-function getAb(s){ var r=ATT_CACHE[s.id]; return (r&&Object.keys(r).length>0)?absentCount(r):(s.absent||0); }
+function getP(s){ var r=ATT_CACHE[s.id]; if(r===undefined) return (s.present||0); return presentCount(r); }
+function getAb(s){ var r=ATT_CACHE[s.id]; if(r===undefined) return (s.absent||0); return absentCount(r); }
 function getPct(s){ var p=getP(s),ab=getAb(s),t=p+ab; return t?Math.round(p/t*100):0; }
 function feeColor(f){ return f==='Paid'?'p-green':f==='Overdue'?'p-red':'p-amber'; }
 function courseColor(c){ var m={ADCA:'p-purple','ADCA+':'p-purple',DCA:'p-blue',TALLY:'p-amber',DTP:'p-blue',HTML:'p-green',CSS:'p-green',JS:'p-amber',MIS:'p-blue',CYBERCAFE:'p-gray',TYPING:'p-gray',OTHER:'p-gray'}; return m[c]||'p-gray'; }
@@ -861,8 +861,9 @@ function loadAllAttFB(){
       return fb.getDocs(qa).then(function(snap){
       var rec={};
       snap.forEach(function(d){var dd=d.data();if(dd.dateKey) rec[dd.dateKey]=dd; else rec[d.id]=dd;});
-      ATT_CACHE[s.id]=rec;
-      if(Object.keys(rec).length>0){s.present=presentCount(rec);s.absent=absentCount(rec);}
+      ATT_CACHE[s.id]=rec;  // Always set, even if empty {} — so getP knows Firebase was checked
+      s.present=presentCount(rec);
+      s.absent=absentCount(rec);
     }).catch(function(){});
   });
   return Promise.all(promises);
@@ -893,7 +894,7 @@ function renderStudentTable(list){
       '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
       '<td style="font-size:13px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
       '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>'+
-      '<td><button class="btn-out btn-sm" onclick="viewStudent(\''+s.id+'\')">View</button></td></tr>';
+      '<td style="white-space:nowrap"><button class="btn-out btn-sm" data-sid="'+s.id+'" onclick="viewStudentBtn(this)">View</button> <button class="btn-out btn-sm btn-danger" data-sid="'+s.id+'" onclick="deleteStudentBtn(this)" title="Delete"><i class="ti ti-trash"></i></button></td></tr>';
   }).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No students</td></tr>');
 }
 
@@ -1008,9 +1009,53 @@ function viewStudent(id){
     '</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\''+s.name+'\')"><i class="ti ti-send"></i> Fee Reminder</button>'+
+    '<button class="btn-out btn-sm btn-danger" onclick="closeModal();deleteStudentFromModal(\''+s.id+'\')"><i class="ti ti-trash"></i> Delete</button>'+
     '<button class="btn-out btn-sm" onclick="closeModal()"><i class="ti ti-x"></i> Close</button></div>'
   );
   showEl('student-modal');
+}
+function viewStudentBtn(btn){ viewStudent(btn.getAttribute('data-sid')); }
+function deleteStudentFromModal(id){
+  var s=DB.students.find(function(st){return st.id===id;});
+  if(!s) return;
+  if(!confirm('Student "'+s.name+'" ko DELETE karna chahte hain?\nYe action undo nahi ho sakti.')) return;
+  if(window._fb){
+    var fb=window._fb;
+    fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+      snap.forEach(function(d){
+        if(d.data().email&&d.data().email.toLowerCase()===s.email.toLowerCase())
+          fb.deleteDoc(fb.doc(fb.db,'approvedStudents',d.id)).catch(console.warn);
+      });
+    });
+  }
+  DB.students=DB.students.filter(function(st){return st.id!==id;});
+  delete ATT_CACHE[id];
+  loadAdminData();
+  alert('✅ "'+s.name+'" delete ho gaya.');
+}
+function deleteStudentBtn(btn){
+  var id=btn.getAttribute('data-sid');
+  var s=DB.students.find(function(st){return st.id===id;});
+  if(!s) return;
+  if(!confirm('Student "'+s.name+'" ko DELETE karna chahte hain?\n\nYe action undo nahi ho sakti.')) return;
+  // Remove from Firebase approvedStudents
+  if(window._fb && s.fbDocId){
+    window._fb.deleteDoc(window._fb.doc(window._fb.db,'approvedStudents',s.fbDocId)).catch(console.warn);
+  } else if(window._fb){
+    // Try to find by email
+    var fb=window._fb;
+    fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+      snap.forEach(function(d){
+        if(d.data().email&&d.data().email.toLowerCase()===s.email.toLowerCase())
+          fb.deleteDoc(fb.doc(fb.db,'approvedStudents',d.id)).catch(console.warn);
+      });
+    });
+  }
+  // Remove from local array
+  DB.students=DB.students.filter(function(st){return st.id!==id;});
+  delete ATT_CACHE[id];
+  loadAdminData();
+  alert('✅ Student "'+s.name+'" ko successfully delete kar diya gaya.');
 }
 function closeModal(){ hideEl('student-modal'); }
 
