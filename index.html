@@ -371,7 +371,10 @@ textarea.finput{resize:vertical;min-height:80px}
       <div data-sec="a-dashboard">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Admin Overview</div>
-          <button class="btn-out btn-sm" onclick="loadAdminData()"><i class="ti ti-refresh"></i> Refresh</button>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <button class="btn-out btn-sm" onclick="loadAdminData()"><i class="ti ti-refresh"></i> Refresh</button>
+            <button class="btn-out btn-sm" style="border-color:var(--amber);color:var(--amber)" onclick="repairDuplicateIds()" title="Firebase mein duplicate IDs fix karo"><i class="ti ti-tool"></i> Fix Duplicate IDs</button>
+          </div>
         </div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="ad-total">0</div><div class="stat-lbl">Total Students</div></div>
@@ -532,8 +535,28 @@ var ATT_CACHE = {};
 var currentUser    = null;
 var isAdmin        = false;
 var loginMode      = 'student';
-var idCounter      = 4;
 var attMarkedToday = false;  // session guard
+
+/* 
+  ID Generation: Firebase se load hone ke baad max ID se counter set hoga.
+  Fallback: timestamp-based unique number to prevent ANY collision.
+*/
+function generateUniqueId(){
+  // Find max existing ID number across ALL students + pending
+  var maxNum = 3; // Demo students hain 0001,0002,0003
+  var allReg = DB.students.concat(DB.pendingRegs);
+  allReg.forEach(function(s){
+    if(s.id){
+      var match = s.id.match(/RI-\d{4}-(\d{4,})/);
+      if(match){
+        var n = parseInt(match[1],10);
+        if(n > maxNum) maxNum = n;
+      }
+    }
+  });
+  var newNum = maxNum + 1;
+  return 'RI-2026-' + String(newNum).padStart(4,'0');
+}
 
 /* ==================== FIREBASE INIT ==================== */
 document.addEventListener('fbReady', function(){
@@ -602,6 +625,7 @@ function updatePendingBadge(){
 /* ==================== FIREBASE: LOAD APPROVED STUDENTS ==================== */
 function loadApprovedStudentsFB(){
   var fb=FB(); if(!fb) return;
+  // Load approved students
   fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
     snap.forEach(function(d){
       var data=d.data(); data.fbDocId=d.id; data.approved=true;
@@ -609,6 +633,15 @@ function loadApprovedStudentsFB(){
       if(!exists) DB.students.push(data);
     });
   }).catch(function(e){ console.warn('loadApprovedStudentsFB:',e); });
+  // Also load pending so generateUniqueId() knows about them
+  fb.getDocs(fb.collection(fb.db,'pendingRegs')).then(function(snap){
+    snap.forEach(function(d){
+      var data=d.data(); data.fbDocId=d.id;
+      var exists=DB.pendingRegs.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
+      var existsApproved=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
+      if(!exists && !existsApproved) DB.pendingRegs.push(data);
+    });
+  }).catch(function(e){ console.warn('loadPendingOnInit:',e); });
 }
 
 /* ==================== AUTH ==================== */
@@ -705,8 +738,16 @@ function doRegister(){
                  DB.pendingRegs.some(function(s){ return s.email.toLowerCase()===email; });
   if(emailTaken){ showRegErr('This email is already registered.'); return; }
 
-  // Generate unique ID based on timestamp to avoid collisions
-  var newId='RI-2026-'+String(idCounter).padStart(4,'0'); idCounter++;
+  // Generate unique ID based on ALL existing students + pending (Firebase-aware)
+  var newId = generateUniqueId();
+  
+  // Extra safety: ensure no duplicate ID
+  var idExists = DB.students.some(function(s){ return s.id===newId; }) ||
+                 DB.pendingRegs.some(function(s){ return s.id===newId; });
+  if(idExists){
+    // Timestamp fallback — guaranteed unique
+    newId = 'RI-2026-' + Date.now().toString().slice(-6);
+  }
   var student={
     id:newId,name:name,father:father,mobile:mobile,email:email,dob:dob,
     gender:gender,course:course,slot:slot,address:addr,password:pass,
@@ -1104,8 +1145,15 @@ function loadApprovedFB(fb){
   return fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
     snap.forEach(function(d){
       var data=d.data(); data.fbDocId=d.id; data.approved=true;
-      var exists=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
-      if(!exists) DB.students.push(data);
+      // Check by email AND by id — prevent any duplicate
+      var existsByEmail=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
+      var existsById=data.id&&DB.students.some(function(s){ return s.id===data.id; });
+      if(!existsByEmail && !existsById){
+        DB.students.push(data);
+      } else if(existsById && !existsByEmail){
+        // Same ID different email — this is the duplicate ID bug! Log it.
+        console.warn('DUPLICATE ID DETECTED in Firebase:',data.id,data.name,'vs existing',DB.students.find(function(s){return s.id===data.id;}).name);
+      }
     });
   }).catch(function(e){ console.warn('loadApprovedFB:',e); });
 }
@@ -1474,6 +1522,88 @@ function _renderPendingUI(){
       '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')">'+
       '<i class="ti ti-x"></i> Reject</button></div></div></div>';
   }).join(''));
+}
+
+/* ==================== REPAIR DUPLICATE IDs ====================
+   Ye function Firebase mein jo students hain unke duplicate IDs fix karta hai.
+   Sabko unique ID assign karta hai aur Firebase update karta hai.
+   Admin dashboard mein "Fix Duplicate IDs" button se call hota hai.
+============================================================== */
+function repairDuplicateIds(){
+  var fb=FB();
+  if(!fb){ alert('Firebase connected nahi hai.'); return; }
+  if(!confirm('Firebase mein sabhi students ki IDs check karke duplicates fix karein?\n\nYe safe operation hai — sirf duplicate IDs wale students ko naya unique ID milega.')){return;}
+  
+  showLoading('Checking Firebase for duplicate IDs...');
+  
+  fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+    var allDocs = [];
+    snap.forEach(function(d){ allDocs.push({docId:d.id, data:d.data()}); });
+    
+    // Group by assigned student ID to find duplicates
+    var idGroups = {};
+    allDocs.forEach(function(item){
+      var sid = item.data.id || 'NO_ID';
+      if(!idGroups[sid]) idGroups[sid] = [];
+      idGroups[sid].push(item);
+    });
+    
+    var fixPromises = [];
+    var fixCount = 0;
+    var usedIds = new Set();
+    
+    // Collect all existing IDs first
+    allDocs.forEach(function(item){ if(item.data.id) usedIds.add(item.data.id); });
+    
+    Object.keys(idGroups).forEach(function(sid){
+      var group = idGroups[sid];
+      if(group.length > 1){
+        // First one keeps the ID, rest get new unique IDs
+        group.slice(1).forEach(function(item){
+          // Find max ID number from all existing
+          var maxNum = 0;
+          usedIds.forEach(function(existingId){
+            var match = String(existingId).match(/RI-\d{4}-(\d+)/);
+            if(match){ var n=parseInt(match[1],10); if(n>maxNum) maxNum=n; }
+          });
+          var newId = 'RI-2026-' + String(maxNum+1).padStart(4,'0');
+          usedIds.add(newId);
+          
+          var updatedData = Object.assign({}, item.data, {id: newId});
+          console.log('Fixing duplicate: '+item.data.name+' from '+sid+' to '+newId);
+          fixPromises.push(
+            fb.setDoc(fb.doc(fb.db,'approvedStudents',item.docId), updatedData)
+              .then(function(){ fixCount++; })
+              .catch(function(e){ console.warn('Fix failed for '+item.data.name+':',e); })
+          );
+        });
+      }
+    });
+    
+    if(fixPromises.length === 0){
+      hideLoading();
+      alert('✅ Koi duplicate ID nahi mili! Sab theek hai.');
+      return;
+    }
+    
+    Promise.all(fixPromises).then(function(){
+      hideLoading();
+      alert('✅ '+fixCount+' students ki IDs fix ho gayi!\n\nPage refresh hoga aur sahi data load hoga.');
+      // Reload everything fresh
+      DB.students = JSON.parse(JSON.stringify(DEMO_STUDENTS));
+      DB.pendingRegs = [];
+      ATT_CACHE = {};
+      loadAdminData();
+    }).catch(function(e){
+      hideLoading();
+      console.error(e);
+      alert('Kuch error aayi. Console check karo.');
+    });
+  }).catch(function(e){
+    hideLoading();
+    console.error(e);
+    alert('Firebase se data load nahi hua. Internet check karo.');
+  });
 }
 
 /* ==================== NOTIFICATIONS / FEES ==================== */
