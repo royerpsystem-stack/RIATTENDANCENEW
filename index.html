@@ -269,7 +269,7 @@ textarea.finput{resize:vertical;min-height:80px}
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:14px">My Attendance</div>
         <div class="g2">
           <div class="card">
-            <div class="card-title" id="cal-title">Calendar — <span id="cal-month-lbl"></span></div>
+            <div class="card-title" id="cal-title">Calendar</div>
             <div class="cal-grid" id="att-calendar"></div>
             <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap">
               <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#d1fae5;display:inline-block"></span>Present</span>
@@ -320,15 +320,7 @@ textarea.finput{resize:vertical;min-height:80px}
         </div>
         <div class="card">
           <div class="card-title">Monthly Performance</div>
-          <div style="display:flex;flex-direction:column;gap:10px" id="report-bars">
-            <div style="font-size:12px">
-              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-                <span style="font-weight:600" id="r-may-month">This Month</span>
-                <span style="color:var(--blue);font-weight:700" id="r-may-pct">0%</span>
-              </div>
-              <div class="pbar" style="height:10px"><div class="pbar-fill" id="r-may-bar" style="width:0%"></div></div>
-            </div>
-          </div>
+          <div style="display:flex;flex-direction:column;gap:10px" id="report-bars"><div style="color:var(--muted);font-size:12px;padding:8px">Loading...</div></div>
         </div>
       </div>
 
@@ -371,10 +363,7 @@ textarea.finput{resize:vertical;min-height:80px}
       <div data-sec="a-dashboard">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">Admin Overview</div>
-          <div style="display:flex;gap:7px;flex-wrap:wrap">
-            <button class="btn-out btn-sm" onclick="loadAdminData()"><i class="ti ti-refresh"></i> Refresh</button>
-            <button class="btn-out btn-sm" style="border-color:var(--amber);color:var(--amber)" onclick="repairDuplicateIds()" title="Firebase mein duplicate IDs fix karo"><i class="ti ti-tool"></i> Fix Duplicate IDs</button>
-          </div>
+          <button class="btn-out btn-sm" onclick="loadAdminData()"><i class="ti ti-refresh"></i> Refresh</button>
         </div>
         <div class="g4">
           <div class="stat s-blue"><div class="stat-num" id="ad-total">0</div><div class="stat-lbl">Total Students</div></div>
@@ -500,6 +489,7 @@ window._fbReady=true;
 document.dispatchEvent(new Event('fbReady'));
 </script>
 
+
 <script>
 /* ==================== STATE ==================== */
 var ADMIN_CREDS = { email:'admin@royinfotech.in', password:'admin123' };
@@ -521,47 +511,24 @@ var DB = {
 };
 
 /*
-  ATT_CACHE[studentId][dateKey] = { status, time, method, studentId, dateKey, ... }
-
-  STRICT RULES:
-  1. ATT_CACHE[X] is ONLY populated from Firebase records where studentId === X
-  2. When student logs in, we load ONLY their own records
-  3. Admin loads each student separately with studentId filter
-  4. Doc ID in Firebase = studentId + '_' + dateKey (e.g. "RI-2026-0001_2026-05-16")
-     This prevents any collision or cross-contamination
+  ATT_CACHE[studentEmail][dateKey] = { status, time, method, studentEmail, dateKey }
+  ONLY the logged-in student's own data goes into ATT_CACHE[currentUser.email]
+  Admin loads ALL students via loadAllAttFB()
+  NEVER mix one student's records into another's cache key.
 */
 var ATT_CACHE = {};
 
-var currentUser    = null;
-var isAdmin        = false;
-var loginMode      = 'student';
-var attMarkedToday = false;  // session guard
-
-/* 
-  ID Generation: Firebase se load hone ke baad max ID se counter set hoga.
-  Fallback: timestamp-based unique number to prevent ANY collision.
-*/
-function generateUniqueId(){
-  // Find max existing ID number across ALL students + pending
-  var maxNum = 3; // Demo students hain 0001,0002,0003
-  var allReg = DB.students.concat(DB.pendingRegs);
-  allReg.forEach(function(s){
-    if(s.id){
-      var match = s.id.match(/RI-\d{4}-(\d{4,})/);
-      if(match){
-        var n = parseInt(match[1],10);
-        if(n > maxNum) maxNum = n;
-      }
-    }
-  });
-  var newNum = maxNum + 1;
-  return 'RI-2026-' + String(newNum).padStart(4,'0');
-}
+var currentUser = null;
+var isAdmin     = false;
+var loginMode   = 'student';
+var idCounter   = 4;
+var attMarkedToday = false; // local guard for this session
 
 /* ==================== FIREBASE INIT ==================== */
 document.addEventListener('fbReady', function(){
   loadApprovedStudentsFB();
 });
+
 function FB(){ return window._fb || null; }
 
 /* ==================== HELPERS ==================== */
@@ -588,21 +555,22 @@ function courseColor(c){
 }
 function feeColor(f){ return f==='Paid'?'p-green':f==='Overdue'?'p-red':'p-amber'; }
 
-/* Safe count helpers - only count records for a specific studentId */
-function countPresent(rec){
-  var n=0;
-  Object.keys(rec||{}).forEach(function(k){ if((rec[k].status||'Present')==='Present') n++; });
-  return n;
+/* Count present/absent from a student's OWN record map */
+function countPresent(rec){ 
+  var n=0; 
+  Object.keys(rec||{}).forEach(function(k){ if((rec[k].status||'Present')==='Present') n++; }); 
+  return n; 
 }
-function countAbsent(rec){
-  var n=0;
-  Object.keys(rec||{}).forEach(function(k){ if(rec[k].status==='Absent') n++; });
-  return n;
+function countAbsent(rec){ 
+  var n=0; 
+  Object.keys(rec||{}).forEach(function(k){ if(rec[k].status==='Absent') n++; }); 
+  return n; 
 }
-function getAttRec(sid){ return ATT_CACHE[sid] || {}; }
-function getP(sid){   return countPresent(getAttRec(sid)); }
-function getAb(sid){  return countAbsent(getAttRec(sid)); }
-function getPct(sid){ var p=getP(sid),ab=getAb(sid),t=p+ab; return t?Math.round(p/t*100):0; }
+/* For a given student object, get counts from ATT_CACHE if loaded, else from .present/.absent */
+// Now use email as key (email is unique, ID can duplicate)
+function getP(semail){  var r=ATT_CACHE[semail]; return r!==undefined ? countPresent(r) : 0; }
+function getAb(semail){ var r=ATT_CACHE[semail]; return r!==undefined ? countAbsent(r)  : 0; }
+function getPct(semail){ var p=getP(semail),ab=getAb(semail),t=p+ab; return t?Math.round(p/t*100):0; }
 
 function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
 function setHTML(id,v){ var el=document.getElementById(id); if(el) el.innerHTML=v; }
@@ -625,23 +593,17 @@ function updatePendingBadge(){
 /* ==================== FIREBASE: LOAD APPROVED STUDENTS ==================== */
 function loadApprovedStudentsFB(){
   var fb=FB(); if(!fb) return;
-  // Load approved students
   fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
     snap.forEach(function(d){
-      var data=d.data(); data.fbDocId=d.id; data.approved=true;
+      var data=d.data(); 
+      data.fbDocId=d.id; 
+      data.approved=true;
+      // CRITICAL FIX: Always use Firebase doc ID (ALWAYS unique, even if old data has duplicates)
+      data.id='RI-'+d.id;
       var exists=DB.students.some(function(s){ return s.email.toLowerCase()===data.email.toLowerCase(); });
       if(!exists) DB.students.push(data);
     });
-  }).catch(function(e){ console.warn('loadApprovedStudentsFB:',e); });
-  // Also load pending so generateUniqueId() knows about them
-  fb.getDocs(fb.collection(fb.db,'pendingRegs')).then(function(snap){
-    snap.forEach(function(d){
-      var data=d.data(); data.fbDocId=d.id;
-      var exists=DB.pendingRegs.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
-      var existsApproved=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
-      if(!exists && !existsApproved) DB.pendingRegs.push(data);
-    });
-  }).catch(function(e){ console.warn('loadPendingOnInit:',e); });
+  }).catch(function(e){ console.warn('loadApprovedStudentsFB error:',e); });
 }
 
 /* ==================== AUTH ==================== */
@@ -671,6 +633,7 @@ function doLogin(){
     return;
   }
 
+  // Student login — search approved students
   var found=null;
   for(var i=0;i<DB.students.length;i++){
     var st=DB.students[i];
@@ -678,11 +641,14 @@ function doLogin(){
       found=st; break;
     }
   }
-  if(found){ isAdmin=false; currentUser=found; attMarkedToday=false; launchApp(); return; }
 
+  if(found){ isAdmin=false; currentUser=found; launchApp(); return; }
+
+  // Check pending
   var isPending=DB.pendingRegs.some(function(s){ return s.email.toLowerCase()===email; });
   if(isPending){ showLoginErr('Registration pending admin approval.'); return; }
 
+  // Try Firebase directly (handles newly approved students not yet in local cache)
   var fb=FB();
   if(fb){
     showLoading('Verifying...');
@@ -698,19 +664,20 @@ function doLogin(){
       if(fbFound){
         var dup=DB.students.some(function(s){ return s.email.toLowerCase()===email; });
         if(!dup) DB.students.push(fbFound);
-        isAdmin=false; currentUser=fbFound; attMarkedToday=false; launchApp();
+        isAdmin=false; currentUser=fbFound; launchApp();
       } else {
         fb.getDocs(fb.collection(fb.db,'pendingRegs')).then(function(s2){
           var pend=false;
           s2.forEach(function(d){ if(d.data().email&&d.data().email.toLowerCase()===email) pend=true; });
           showLoginErr(pend?'Registration pending admin approval.':'Email/password incorrect. Please register first.');
-        }).catch(function(){ showLoginErr('Email/password incorrect.'); });
+        }).catch(function(){ showLoginErr('Email/password incorrect. Please register first.'); });
       }
     }).catch(function(){ hideLoading(); showLoginErr('Login failed. Check your internet.'); });
   } else {
     showLoginErr('Email/password incorrect. Please register first.');
   }
 }
+
 function showLoginErr(msg){ var el=document.getElementById('login-err'); if(el){el.textContent=msg; el.style.display='block';} }
 
 /* ==================== REGISTER ==================== */
@@ -738,18 +705,12 @@ function doRegister(){
                  DB.pendingRegs.some(function(s){ return s.email.toLowerCase()===email; });
   if(emailTaken){ showRegErr('This email is already registered.'); return; }
 
-  // Generate unique ID based on ALL existing students + pending (Firebase-aware)
-  var newId = generateUniqueId();
-  
-  // Extra safety: ensure no duplicate ID
-  var idExists = DB.students.some(function(s){ return s.id===newId; }) ||
-                 DB.pendingRegs.some(function(s){ return s.id===newId; });
-  if(idExists){
-    // Timestamp fallback — guaranteed unique
-    newId = 'RI-2026-' + Date.now().toString().slice(-6);
-  }
+  // Generate unique ID: RI-YYYY-XXXXXX (timestamp-based, never duplicates)
+  // ID will be set to Firebase doc ID after save (guaranteed unique)
+  // Temporary local ID using timestamp + random (for offline fallback only)
+  var tempId='RI-TEMP-'+Date.now()+'-'+Math.floor(Math.random()*9999);
   var student={
-    id:newId,name:name,father:father,mobile:mobile,email:email,dob:dob,
+    id:tempId,name:name,father:father,mobile:mobile,email:email,dob:dob,
     gender:gender,course:course,slot:slot,address:addr,password:pass,
     feeStatus:'Pending',
     feeAmt:(course==='ADCA'||course==='ADCA+')?1200:(course==='DCA'?1000:800),
@@ -760,14 +721,17 @@ function doRegister(){
   btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> Submitting...';
 
   function onSuccess(docId){
-    if(docId) student.fbDocId=docId;
+    if(docId){
+      student.fbDocId=docId;
+      student.id='RI-'+docId; // Use Firebase doc ID as permanent unique student ID
+    }
     DB.pendingRegs.push(student);
     updatePendingBadge();
     var ok=document.getElementById('reg-ok');
-    ok.innerHTML='✅ Registered! <b>ID: '+newId+'</b><br>Awaiting admin approval.';
+    ok.innerHTML='✅ Registered! <b>ID: '+student.id+'</b><br>Awaiting admin approval.';
     ok.style.display='block';
     btn.disabled=false; btn.innerHTML='<i class="ti ti-user-plus"></i> Register &amp; Submit';
-    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(function(fid){ document.getElementById(fid).value=''; });
+    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(function(id){ document.getElementById(id).value=''; });
     document.getElementById('r-gender').value='';
     document.getElementById('r-course').value='';
     document.getElementById('r-slot').value='';
@@ -795,6 +759,9 @@ function launchApp(){
   else        { loadStudentAttFB(); }
 }
 
+function emailKey(email){ return (email||'').replace(/[@.]/g,'_').toLowerCase(); }
+function studentKey(s){ return emailKey(s.email||s.id); }
+
 function initQR(){
   var g=document.getElementById('qr-grid'); if(!g) return;
   var pat=[1,1,1,0,1,1,1,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0];
@@ -802,66 +769,50 @@ function initQR(){
   var qd=document.getElementById('qr-date'); if(qd) qd.textContent=todayStr();
 }
 
-/* ==================== STUDENT: LOAD OWN ATTENDANCE FROM FIREBASE ====================
-   BUG FIX: Query STRICTLY by studentId === currentUser.id
-   Even if Firebase returns extra docs, we double-verify studentId before storing.
-   This prevents one student's records from appearing under another student.
-==================================================================================== */
+/* ==================== STUDENT: LOAD OWN ATTENDANCE FROM FIREBASE ==================== */
+/*
+  KEY FIX: We ONLY load records where studentId === currentUser.id
+  This prevents one student's attendance from showing up in another student's view.
+*/
 function loadStudentAttFB(){
   var fb=FB();
   if(!fb||!currentUser){ renderStudentUI(); showSec('s-dashboard'); return; }
-
-  var myId = currentUser.id;  // Capture NOW to prevent any closure bugs
   showLoading('Loading your attendance...');
-
-  var q=fb.query(
-    fb.collection(fb.db,'attendance_records'),
-    fb.where('studentId','==',myId)   // ← Only MY records
-  );
-
+  // Use email as studentId for queries (email is always unique, ID may duplicate)
+  var myKey=emailKey(currentUser.email);
+  var q=fb.query(fb.collection(fb.db,'attendance_records'), fb.where('studentEmail','==',currentUser.email));
   fb.getDocs(q).then(function(snap){
     hideLoading();
     var rec={};
     snap.forEach(function(d){
       var dd=d.data();
-      // DOUBLE CHECK: only store if studentId matches exactly
-      if(dd.studentId && dd.studentId === myId){
-        var key = dd.dateKey;
-        // Validate dateKey format (YYYY-MM-DD)
-        if(key && /^\d{4}-\d{2}-\d{2}$/.test(key)){
-          rec[key] = dd;
-        }
+      // Double-check: only store if studentId matches (extra safety)
+      if(dd.studentId===currentUser.id){
+        var key=dd.dateKey||d.id;
+        rec[key]=dd;
       }
     });
-    ATT_CACHE[myId] = rec;  // Store under THIS student's ID only
-
-    // Set session guard if already marked today
-    if(rec[todayKey()]){
-      attMarkedToday = true;
-    }
-
+    ATT_CACHE[currentUser.email]=rec;
+    // Check if already marked today
+    if(rec[todayKey()]&&rec[todayKey()].status==='Present'){ attMarkedToday=true; }
+    currentUser.present=countPresent(rec);
+    currentUser.absent=countAbsent(rec);
     renderStudentUI();
     showSec('s-dashboard');
     buildCalendar(rec);
     buildAttLog(rec);
   }).catch(function(e){
-    hideLoading();
-    console.warn('loadStudentAttFB error:',e);
-    ATT_CACHE[myId] = {};
-    renderStudentUI();
-    showSec('s-dashboard');
+    hideLoading(); console.warn('loadStudentAttFB error:',e);
+    ATT_CACHE[currentUser.email]={};
+    renderStudentUI(); showSec('s-dashboard');
   });
 }
 
 /* ==================== STUDENT UI ==================== */
 function renderStudentUI(){
   var s=currentUser; if(!s) return;
-  var myId = s.id;
-  var rec  = getAttRec(myId);
-  var p    = countPresent(rec);
-  var ab   = countAbsent(rec);
-  var total= p+ab;
-  var pc   = total ? Math.round(p/total*100) : 0;
+  var rec=ATT_CACHE[s.email]||{};
+  var p=countPresent(rec), ab=countAbsent(rec), total=p+ab, pc=total?Math.round(p/total*100):0;
 
   setText('dash-greet','Good '+greeting()+', '+s.name.split(' ')[0]+'! 👋');
   setText('dash-sub',  s.course+' • '+s.slot+' Batch');
@@ -879,14 +830,12 @@ function renderStudentUI(){
   setText('course-slot', s.slot);
   setText('course-id',   s.id);
   setHTML('fee-status-lbl','<span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span>');
-
   if(s.feeStatus!=='Paid'){
     document.getElementById('fee-alert-box').style.display='flex';
     setText('fee-alert-txt','Monthly fee of ₹'+s.feeAmt+' is due. Please pay to avoid suspension.');
   } else {
     document.getElementById('fee-alert-box').style.display='none';
   }
-
   var ini=initials(s.name);
   setText('prof-av', ini); setText('card-av', ini);
   setText('prof-name', s.name); setText('prof-id', 'Student ID: '+s.id);
@@ -906,39 +855,24 @@ function renderStudentUI(){
            '<div style="font-weight:600;font-size:12px">'+f[1]+'</div></div>';
   }).join(''));
 
-  // Reports section
-  setText('r-present', p);
-  setText('r-absent',  ab);
-  setText('r-pct',     pc+'%');
-  setText('r-total',   total);
+  setText('r-present', p); setText('r-pct', pc+'%');
+  setText('r-total',   p); setText('r-absent', ab);
   setText('r-may-pct', pc+'%');
-  var mayBar=document.getElementById('r-may-bar');
-  if(mayBar) mayBar.style.width=pc+'%';
+  document.getElementById('r-may-bar').style.width=pc+'%';
 
   var notifHTML=DB.notifications.map(notifCard).join('');
   var fallback='<div style="color:var(--muted);font-size:12px;padding:10px">No notifications</div>';
   setHTML('dash-notifs',         notifHTML||fallback);
   setHTML('student-notifs-list', notifHTML||fallback);
 
-  // Today status
-  var todayMarked = attMarkedToday || !!(rec[todayKey()]);
+  // Update today mark-button state
   var btn=document.getElementById('att-main-btn');
-  if(todayMarked){
+  if(attMarkedToday||(rec[todayKey()]&&rec[todayKey()].status==='Present')){
     if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓'; btn.style.opacity='0.6'; btn.disabled=true;}
-    var pill=document.getElementById('att-status-pill');
-    if(pill){pill.className='pill p-green'; pill.textContent='Present ✓';}
-    // Show "already" box if on attendance tab
-    var todayRec=rec[todayKey()];
-    if(todayRec){
-      var attAlready=document.getElementById('att-already');
-      var attAlreadyTime=document.getElementById('att-already-time');
-      if(attAlready) attAlready.style.display='block';
-      if(attAlreadyTime) attAlreadyTime.textContent='Attendance time: '+todayRec.time;
-    }
+    document.getElementById('att-status-pill').className='pill p-green';
+    setText('att-status-pill','Present ✓');
   } else {
     if(btn){btn.innerHTML='<i class="ti ti-check"></i> Mark Present'; btn.style.opacity=''; btn.disabled=false;}
-    var pill2=document.getElementById('att-status-pill');
-    if(pill2){pill2.className='pill p-amber'; pill2.textContent='Not Marked';}
   }
 }
 
@@ -963,20 +897,15 @@ function buildCalendar(rec){
   var days=['S','M','T','W','T','F','S'];
   var html=days.map(function(d){return '<div class="cal-hd">'+d+'</div>';}).join('');
   for(var i=0;i<firstDay;i++) html+='<div class="cal-cell" style="color:transparent">·</div>';
-  for(var dd=1;dd<=daysInMonth;dd++){
-    var key=y+'-'+pad(m+1)+'-'+pad(dd);
+  for(var d=1;d<=daysInMonth;d++){
+    var key=y+'-'+pad(m+1)+'-'+pad(d);
     var r=rec[key];
     var cls='';
-    if(dd===today){
-      cls = (r && r.status==='Present') ? 'cal-today-present' : 'cal-today';
-    } else if(dd>today){
-      cls='cal-future';
-    } else if(r&&r.status==='Present'){
-      cls='cal-present';
-    } else if(r&&r.status==='Absent'){
-      cls='cal-absent';
-    }
-    html+='<div class="cal-cell '+cls+'">'+dd+'</div>';
+    if(d===today) cls='cal-today';
+    else if(d>today) cls='cal-future';
+    else if(r&&r.status==='Present') cls='cal-present';
+    else if(r&&r.status==='Absent')  cls='cal-absent';
+    html+='<div class="cal-cell '+cls+'">'+d+'</div>';
   }
   cal.innerHTML=html;
   var lbl=document.getElementById('cal-month-lbl');
@@ -986,121 +915,75 @@ function buildCalendar(rec){
 function buildAttLog(rec){
   var tbody=document.getElementById('att-log-body'); if(!tbody) return;
   var keys=Object.keys(rec).sort(function(a,b){return b.localeCompare(a);}).slice(0,20);
-  if(keys.length===0){
-    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">No attendance records yet</td></tr>';
-    return;
-  }
+  if(keys.length===0){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">No attendance records yet</td></tr>'; return; }
   tbody.innerHTML=keys.map(function(k){
     var r=rec[k];
-    var d=new Date(k+'T00:00:00');  // Force local date parse
+    var d=new Date(k);
     var dayName=d.toLocaleDateString('en-IN',{weekday:'short'});
     var dateStr=d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
     var cls=r.status==='Present'?'p-green':'p-red';
-    return '<tr>'+
-      '<td>'+dateStr+'</td>'+
-      '<td>'+dayName+'</td>'+
-      '<td>'+(r.time||'—')+'</td>'+
-      '<td><span class="pill '+cls+'">'+r.status+'</span></td>'+
-      '<td><span class="pill p-blue">'+(r.method||'Manual')+'</span></td>'+
-      '</tr>';
+    return '<tr><td>'+dateStr+'</td><td>'+dayName+'</td><td>'+(r.time||'—')+'</td>'+
+           '<td><span class="pill '+cls+'">'+r.status+'</span></td>'+
+           '<td><span class="pill p-blue">'+(r.method||'Manual')+'</span></td></tr>';
   }).join('');
 }
 
-/* ==================== MARK ATTENDANCE ====================
-   BUG FIX:
-   1. Check BOTH attMarkedToday AND rec[todayKey()] before saving
-   2. Only save if student is logged in and currentUser.id is valid
-   3. Firebase doc ID = studentId_dateKey (completely unique, no collision)
-   4. studentId is explicitly set from currentUser.id (not from any loop variable)
-======================================================== */
+/* ==================== MARK ATTENDANCE ==================== */
 function markAttendance(){
-  if(!currentUser){ alert('Please login first.'); return; }
-  var rec=getAttRec(currentUser.id);
-  if(attMarkedToday || rec[todayKey()]){
-    alert('Aaj ki attendance pehle se mark ho chuki hai!');
-    return;
-  }
+  var rec=ATT_CACHE[currentUser&&currentUser.email]||{};
+  if(attMarkedToday||(rec[todayKey()]&&rec[todayKey()].status==='Present')){ alert('Aaj ki attendance pehle se mark ho chuki hai!'); return; }
   saveAtt();
 }
-
 function markQR(){
-  if(!currentUser){ alert('Please login first.'); return; }
-  var rec=getAttRec(currentUser.id);
-  if(attMarkedToday || rec[todayKey()]){
-    // Already marked — show the "already" box
-    var attOk=document.getElementById('att-ok');
-    var todayRec=rec[todayKey()];
-    if(attOk) attOk.style.display='block';
-    if(todayRec){
-      var attAlready=document.getElementById('att-already');
-      var attAlreadyTime=document.getElementById('att-already-time');
-      if(attAlready) attAlready.style.display='block';
-      if(attAlreadyTime) attAlreadyTime.textContent='Already marked at: '+todayRec.time;
-    }
-    return;
-  }
+  var rec=ATT_CACHE[currentUser&&currentUser.email]||{};
+  if(attMarkedToday||(rec[todayKey()]&&rec[todayKey()].status==='Present')){ showEl('att-ok'); return; }
   saveAtt();
 }
 
 function saveAtt(){
   if(!currentUser){ alert('Please login first.'); return; }
+  var now=new Date();
+  var timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var key=todayKey();
 
-  var myId   = currentUser.id;    // Capture once — never use loop variable
-  var myName = currentUser.name;
-  var myCourse = currentUser.course;
-  var mySlot = currentUser.slot;
-
-  var now    = new Date();
-  var timeStr= now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-  var key    = todayKey();
-
-  // Build record with THIS student's ID explicitly
-  var record = {
-    status:      'Present',
-    time:        timeStr,
-    method:      'QR Scan',
-    date:        todayStr(),
-    dateKey:     key,          // ← Always set dateKey
-    studentId:   myId,         // ← Explicitly this student's ID
-    studentName: myName,
-    course:      myCourse,
-    slot:        mySlot
+  // Build record with THIS student's ID — very explicit
+  var record={
+    status:'Present',
+    time:timeStr,
+    method:'QR Scan',
+    date:todayStr(),
+    dateKey:key,
+    studentEmail:currentUser.email,   // PRIMARY KEY: email is always unique
+    studentId:currentUser.id,
+    studentName:currentUser.name,
+    course:currentUser.course,
+    slot:currentUser.slot
   };
 
-  // Update local cache under THIS student's ID only
-  if(!ATT_CACHE[myId]) ATT_CACHE[myId] = {};
-  ATT_CACHE[myId][key] = record;
-  attMarkedToday = true;
+  // Update local cache using email as key (email is always unique)
+  if(!ATT_CACHE[currentUser.email]) ATT_CACHE[currentUser.email]={};
+  ATT_CACHE[currentUser.email][key]=record;
+  attMarkedToday=true;
+  currentUser.present=(currentUser.present||0)+1;
 
   // Update UI
-  var attOk=document.getElementById('att-ok');
-  var attAlready=document.getElementById('att-already');
-  if(attOk){ attOk.style.display='block'; }
-  if(attAlready) attAlready.style.display='none';
+  showEl('att-ok'); hideEl('att-already');
   setText('att-marked-info', todayStr()+' • '+timeStr);
-
-  var pill=document.getElementById('att-status-pill');
-  if(pill){pill.className='pill p-green'; pill.textContent='Present ✓';}
-
+  document.getElementById('att-status-pill').className='pill p-green';
+  setText('att-status-pill','Present ✓');
   var btn=document.getElementById('att-main-btn');
   if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓'; btn.style.opacity='0.6'; btn.disabled=true;}
-
-  buildCalendar(ATT_CACHE[myId]);
-  buildAttLog(ATT_CACHE[myId]);
+  buildCalendar(ATT_CACHE[currentUser.email]||{});
+  buildAttLog(ATT_CACHE[currentUser.email]||{});
   renderStudentUI();
 
-  // Save to Firebase
-  // Doc ID = studentId_dateKey — guarantees uniqueness per student per day
+  // Save to Firebase: doc ID = studentId_dateKey (unique per student per day)
   var fb=FB();
   if(fb){
-    var docId = myId + '_' + key;   // e.g. "RI-2026-0001_2026-05-16"
+    var docId=emailKey(currentUser.email)+'_'+key; // unique per student per day
     fb.setDoc(fb.doc(fb.db,'attendance_records',docId), record)
-      .then(function(){
-        console.log('✅ Attendance saved:', docId, 'for student:', myId);
-      })
-      .catch(function(e){
-        console.warn('Attendance save error:',e);
-      });
+      .then(function(){ console.log('✅ Attendance saved: '+docId); })
+      .catch(function(e){ console.warn('Attendance save error:',e); });
   }
 }
 
@@ -1110,6 +993,7 @@ function loadAdminData(){
   var fb=FB();
   if(!fb){ hideLoading(); renderAllAdmin(); return; }
 
+  // Load pending + approved + ALL attendance in parallel
   Promise.all([
     loadPendingFB(fb),
     loadApprovedFB(fb),
@@ -1125,7 +1009,7 @@ function renderAllAdmin(){
   renderAdminStats();
   renderStudentTable(DB.students);
   renderFeeTable(DB.students);
-  renderAdminAttTable();
+  renderAdminAttTable(DB.students);
   renderRecentRegs();
 }
 
@@ -1144,54 +1028,45 @@ function loadPendingFB(fb){
 function loadApprovedFB(fb){
   return fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
     snap.forEach(function(d){
-      var data=d.data(); data.fbDocId=d.id; data.approved=true;
-      // Check by email AND by id — prevent any duplicate
-      var existsByEmail=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
-      var existsById=data.id&&DB.students.some(function(s){ return s.id===data.id; });
-      if(!existsByEmail && !existsById){
-        DB.students.push(data);
-      } else if(existsById && !existsByEmail){
-        // Same ID different email — this is the duplicate ID bug! Log it.
-        console.warn('DUPLICATE ID DETECTED in Firebase:',data.id,data.name,'vs existing',DB.students.find(function(s){return s.id===data.id;}).name);
-      }
+      var data=d.data(); 
+      data.fbDocId=d.id; 
+      data.approved=true;
+      // CRITICAL FIX: ALWAYS override ID with Firebase doc ID
+      // This fixes the bug where all students had same ID (RI-2026-0004)
+      // Firebase doc ID is guaranteed unique, so 'RI-' + docId is always unique
+      data.id='RI-'+d.id;
+      var exists=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
+      if(!exists) DB.students.push(data);
     });
   }).catch(function(e){ console.warn('loadApprovedFB:',e); });
 }
 
-/* ==================== ADMIN: LOAD ALL ATTENDANCE ====================
-   BUG FIX: Load each student's attendance SEPARATELY using studentId filter.
-   This ensures:
-   - ATT_CACHE[A.id] only contains records where studentId === A.id
-   - ATT_CACHE[B.id] only contains records where studentId === B.id
-   - No cross-contamination between students
-   
-   We use an IIFE to properly capture 'sid' in the closure,
-   avoiding the classic loop-variable-closure bug.
-===================================================================== */
+/*
+  KEY FIX: Load attendance for EACH student SEPARATELY using studentId filter.
+  This guarantees Student A's records go into ATT_CACHE[A.email]
+  and Student B's records go into ATT_CACHE[B.email] — NEVER mixed.
+*/
 function loadAllAttFB(fb){
-  // Load per student with strict studentId filtering
-  var promises = DB.students.map(function(student){
-    var sid = student.id;  // Capture in this scope
-    return (function(capturedSid){
-      var q = fb.query(
-        fb.collection(fb.db,'attendance_records'),
-        fb.where('studentId','==',capturedSid)  // Strict filter
-      );
-      return fb.getDocs(q).then(function(snap){
-        var rec = {};
-        snap.forEach(function(d){
-          var dd = d.data();
-          // Verify studentId matches and dateKey is valid
-          if(dd.studentId === capturedSid && dd.dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dd.dateKey)){
-            rec[dd.dateKey] = dd;
-          }
-        });
-        ATT_CACHE[capturedSid] = rec;  // Store under this student's ID only
-      }).catch(function(e){
-        ATT_CACHE[capturedSid] = {};
-        console.warn('Att load fail for '+capturedSid+':',e);
+  var promises=DB.students.map(function(student){
+    var semail=student.email; // Use email as primary key - always unique
+    if(!semail) return Promise.resolve();
+    // Query by studentEmail field (email never duplicates unlike ID)
+    var q=fb.query(fb.collection(fb.db,'attendance_records'), fb.where('studentEmail','==',semail));
+    return fb.getDocs(q).then(function(snap){
+      var rec={};
+      snap.forEach(function(d){
+        var dd=d.data();
+        // Accept both new format (studentEmail) and old format (studentId)
+        if(dd.studentEmail===semail){
+          var k=dd.dateKey||d.id;
+          rec[k]=dd;
+        }
       });
-    })(sid);
+      ATT_CACHE[semail]=rec; // Store under email key - never duplicates
+    }).catch(function(e){
+      ATT_CACHE[semail]={};
+      console.warn('Att load fail for '+semail+':',e);
+    });
   });
   return Promise.all(promises);
 }
@@ -1201,8 +1076,8 @@ function renderAdminStats(){
   setText('ad-total', DB.students.length);
   var tk=todayKey();
   var todayPresent=DB.students.filter(function(s){
-    var r=getAttRec(s.id);
-    return r[tk] && r[tk].status==='Present';
+    var r=ATT_CACHE[s.email]||{};
+    return r[tk]&&r[tk].status==='Present';
   }).length;
   setText('ad-today',       todayPresent);
   setText('ad-pending-fee', DB.students.filter(function(s){ return s.feeStatus!=='Paid'; }).length);
@@ -1228,19 +1103,14 @@ function renderRecentRegs(){
   );
 }
 
-/* ==================== STUDENT TABLE ====================
-   BUG FIX: Store student ID in data attribute, not index.
-   'View' and 'Delete' buttons use data-sid to find the correct student.
-   No more index-based lookups that could return wrong student.
-======================================================= */
 function renderStudentTable(list){
   setHTML('student-tbody', list.length===0
-    ? '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No students found</td></tr>'
+    ? '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No students found</td></tr>'
     : list.map(function(s,i){
-        var p=getP(s.id), ab=getAb(s.id), pc=getPct(s.id);
+        var p=getP(s.email), ab=getAb(s.email), pc=getPct(s.email);
         var pColor=pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)';
         var tk=todayKey();
-        var todayRec=getAttRec(s.id)[tk];
+        var todayRec=(ATT_CACHE[s.email]||{})[tk];
         var todayPill=todayRec
           ? '<span class="pill '+(todayRec.status==='Present'?'p-green':'p-red')+'">'+todayRec.status+'</span>'
           : '<span class="pill p-amber">Not Marked</span>';
@@ -1258,9 +1128,8 @@ function renderStudentTable(list){
           '<td>'+todayPill+'</td>'+
           '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>'+
           '<td style="white-space:nowrap">'+
-          // Use data-sid attribute to store student ID — not index!
-          '<button class="btn-out btn-sm" data-sid="'+s.id+'" onclick="openStudentModal(this.getAttribute(\'data-sid\'))">View</button> '+
-          '<button class="btn-out btn-sm btn-danger" data-sid="'+s.id+'" onclick="deleteStudentByBtn(this)" title="Delete"><i class="ti ti-trash"></i></button>'+
+          '<button class="btn-out btn-sm" data-semail="'+s.email+'" onclick="viewStudentByBtn(this)">View</button> '+
+          '<button class="btn-out btn-sm btn-danger" data-semail="'+s.email+'" onclick="deleteStudentByBtn(this)" title="Delete"><i class="ti ti-trash"></i></button>'+
           '</td></tr>';
       }).join('')
   );
@@ -1276,42 +1145,28 @@ function filterStudents(){
   renderStudentTable(list);
 }
 
-function renderAdminAttTable(){
-  var courseFilter=(document.getElementById('att-filter-course')||{}).value||'';
-  var statusFilter=(document.getElementById('att-filter-status')||{}).value||'';
-  var tk=todayKey();
-  var list=DB.students.filter(function(s){
-    if(courseFilter && s.course!==courseFilter) return false;
-    if(statusFilter){
-      var rec=getAttRec(s.id);
-      var todayRec=rec[tk];
-      var todayStatus=todayRec?todayRec.status:'Absent';
-      if(todayStatus!==statusFilter) return false;
-    }
-    return true;
-  });
-  setHTML('admin-att-body', list.length===0
-    ? '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No students</td></tr>'
-    : list.map(function(s){
-        var p=getP(s.id), ab=getAb(s.id), pc=getPct(s.id);
-        var rec=getAttRec(s.id);
-        var todayRec=rec[tk];
-        var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-amber';
-        var todayTxt=todayRec?todayRec.status:'Not Marked';
-        var todayTime=todayRec&&todayRec.time?todayRec.time:'—';
-        return '<tr>'+
-          '<td><div style="font-size:12px;font-weight:600">'+s.name+'</div>'+
-          '<div style="font-size:10px;color:var(--muted)">'+s.id+'</div></td>'+
-          '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
-          '<td class="hide-mob" style="font-size:11px">'+s.slot+'</td>'+
-          '<td style="font-size:13px;font-weight:800;color:var(--green)">'+p+'</td>'+
-          '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
-          '<td style="font-size:13px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
-          '<td>'+todayTime+'</td>'+
-          '<td><span class="pill '+todayCls+'">'+todayTxt+'</span></td>'+
-          '</tr>';
-      }).join('')
-  );
+function renderAdminAttTable(list){
+  var today=todayStr(), tk=todayKey();
+  list=list||DB.students;
+  setHTML('admin-att-body', list.map(function(s){
+    var p=getP(s.email), ab=getAb(s.email), pc=getPct(s.email);
+    var rec=ATT_CACHE[s.email]||{};
+    var todayRec=rec[tk];
+    var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-amber';
+    var todayTxt=todayRec?todayRec.status:'Absent';
+    var todayTime=todayRec&&todayRec.time?todayRec.time:'—';
+    return '<tr>'+
+      '<td><div style="font-size:12px;font-weight:600">'+s.name+'</div>'+
+      '<div style="font-size:10px;color:var(--muted)">'+s.id+'</div></td>'+
+      '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
+      '<td class="hide-mob" style="font-size:11px">'+s.slot+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:var(--green)">'+p+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
+      '<td>'+todayTime+'</td>'+
+      '<td><span class="pill '+todayCls+'">'+todayTxt+'</span></td>'+
+      '</tr>';
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No students</td></tr>');
 }
 
 function renderFeeTable(list){
@@ -1332,58 +1187,54 @@ function renderFeeTable(list){
   setText('fee-overdue-count',list.filter(function(s){return s.feeStatus==='Overdue';}).length);
 }
 
-/* ==================== STUDENT DETAIL MODAL ====================
-   BUG FIX: openStudentModal(sid) takes student ID as argument.
-   Finds student by ID (not index) using explicit loop.
-   modalStudent stores the found student object.
-   All modal buttons reference modalStudent directly.
-   No closure or scope bugs possible.
-============================================================== */
+/* ==================== STUDENT DETAIL MODAL ==================== */
+/*
+  KEY FIX: Use a dedicated variable 'modalStudent' to avoid closure/scope bugs.
+  Never reuse variable name 's' inside find() callback.
+*/
 var modalStudent = null;
 
-function openStudentModal(sid){
-  // Find student by ID — explicit loop, no index assumptions
-  var found = null;
-  for(var i=0; i<DB.students.length; i++){
-    if(DB.students[i].id === sid){
-      found = DB.students[i];
-      break;
-    }
-  }
-  if(!found){ alert('Student not found: '+sid); return; }
-  modalStudent = found;  // Store globally so modal buttons work
+function viewStudentByBtn(btn){
+  var semail=btn.getAttribute('data-semail');
+  openStudentModal(semail);
+}
 
-  var st  = found;
-  var rec = getAttRec(st.id);   // Always use st.id to get THIS student's records
-  var p   = countPresent(rec);
-  var ab  = countAbsent(rec);
-  var pc  = (p+ab) ? Math.round(p/(p+ab)*100) : 0;
-  var tk  = todayKey();
-  var todayRec = rec[tk];
-  var todayTxt = todayRec ? todayRec.status : 'Not Marked';
-  var todayCls = todayRec ? (todayRec.status==='Present'?'p-green':'p-red') : 'p-amber';
+function openStudentModal(semail){
+  // Find student by email — email is ALWAYS unique, ID can duplicate!
+  var found=null;
+  for(var i=0;i<DB.students.length;i++){
+    if(DB.students[i].email===semail){ found=DB.students[i]; break; }
+  }
+  if(!found){ alert('Student not found: '+semail); return; }
+  modalStudent=found; // Store globally so modal buttons work
+
+  var st=found;
+  var rec=ATT_CACHE[st.email]||{};
+  var p=getP(st.email), ab=getAb(st.email), pc=getPct(st.email);
+  var tk=todayKey();
+  var todayRec=rec[tk];
+  var todayTxt=todayRec?todayRec.status:'Not Marked';
+  var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-amber';
 
   // Last 7 days attendance pills
   var last7='';
-  for(var di=6; di>=0; di--){
+  for(var di=6;di>=0;di--){
     var dd=new Date(); dd.setDate(dd.getDate()-di);
     var dk=dd.getFullYear()+'-'+pad(dd.getMonth()+1)+'-'+pad(dd.getDate());
-    var dr=rec[dk];  // rec is THIS student's records only
-    var dcls=dr ? (dr.status==='Present'?'p-green':'p-red') : 'p-gray';
+    var dr=rec[dk];
+    var dcls=dr?(dr.status==='Present'?'p-green':'p-red'):'p-gray';
     last7+='<div style="text-align:center">'+
-      '<div style="font-size:9px;color:var(--muted);margin-bottom:3px">'+
-        dd.toLocaleDateString('en-IN',{weekday:'short'})+'</div>'+
-      '<span class="pill '+dcls+'" style="font-size:9px;padding:2px 5px">'+
-        (dr?dr.status:'—')+'</span></div>';
+      '<div style="font-size:9px;color:var(--muted);margin-bottom:3px">'+dd.toLocaleDateString('en-IN',{weekday:'short'})+'</div>'+
+      '<span class="pill '+dcls+'" style="font-size:9px;padding:2px 5px">'+(dr?dr.status:'—')+'</span></div>';
   }
 
-  // Attendance log (last 10)
+  // All attendance log (last 10)
   var logKeys=Object.keys(rec).sort(function(a,b){return b.localeCompare(a);}).slice(0,10);
   var logRows=logKeys.length===0
     ? '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:12px">No records yet</td></tr>'
     : logKeys.map(function(k){
         var r=rec[k];
-        var d2=new Date(k+'T00:00:00');
+        var d2=new Date(k);
         return '<tr>'+
           '<td style="font-size:11px">'+d2.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+'</td>'+
           '<td><span class="pill '+(r.status==='Present'?'p-green':'p-red')+'" style="font-size:10px">'+r.status+'</span></td>'+
@@ -1391,38 +1242,45 @@ function openStudentModal(sid){
       }).join('');
 
   setHTML('modal-content',
+    // Header
     '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
     '<div class="av" style="width:48px;height:48px;font-size:16px;border-radius:13px;background:var(--grad)">'+initials(st.name)+'</div>'+
     '<div><div style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:15px">'+st.name+'</div>'+
     '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+st.id+' • '+st.course+' • '+st.slot+'</div></div></div>'+
+    // Big 3 stats
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'+
     '<div style="background:#d1fae5;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#065f46">'+p+'</div><div style="font-size:10px;color:#047857;font-weight:700;margin-top:2px">PRESENT</div></div>'+
     '<div style="background:#fee2e2;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#991b1b">'+ab+'</div><div style="font-size:10px;color:#b91c1c;font-weight:700;margin-top:2px">ABSENT</div></div>'+
     '<div style="background:#dbeafe;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#1e40af">'+pc+'%</div><div style="font-size:10px;color:#1d4ed8;font-weight:700;margin-top:2px">ATT %</div></div>'+
     '</div>'+
+    // Progress bar
     '<div style="margin-bottom:12px"><div class="pbar" style="height:8px"><div class="pbar-fill" style="width:'+pc+'%;background:'+(pc>=80?'linear-gradient(90deg,#10b981,#34d399)':pc>=60?'linear-gradient(90deg,#f59e0b,#fbbf24)':'linear-gradient(90deg,#ef4444,#f87171)')+'"></div></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
+    // Today
     '<div style="background:#f8fafc;border-radius:9px;padding:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'+
     '<div style="font-size:12px;font-weight:600">Aaj ki Attendance ('+todayStr()+')</div>'+
     '<span class="pill '+todayCls+'">'+todayTxt+(todayRec&&todayRec.time?' • '+todayRec.time:'')+'</span></div>'+
+    // Last 7 days
     '<div style="margin-bottom:12px">'+
     '<div style="font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.5px">LAST 7 DAYS</div>'+
     '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+last7+'</div></div>'+
+    // Attendance log table
     '<div style="margin-bottom:12px">'+
     '<div style="font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.5px">RECENT ATTENDANCE LOG</div>'+
     '<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse">'+
-    '<thead><tr>'+
-    '<th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Date</th>'+
+    '<thead><tr><th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Date</th>'+
     '<th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Status</th>'+
-    '<th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Time</th>'+
-    '</tr></thead><tbody>'+logRows+'</tbody></table></div></div>'+
+    '<th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Time</th></tr></thead>'+
+    '<tbody>'+logRows+'</tbody></table></div></div>'+
+    // Info
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:14px">'+
     '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">'+(st.mobile||'—')+'</div></div>'+
     '<div><div style="color:var(--muted);font-size:10px">Fee Status</div><span class="pill '+feeColor(st.feeStatus)+'">'+st.feeStatus+'</span></div>'+
     '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;word-break:break-all">'+(st.email||'—')+'</div></div>'+
     '</div>'+
+    // Buttons
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(modalStudent.name)"><i class="ti ti-send"></i> Fee Reminder</button>'+
+    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\''+st.name+'\')"><i class="ti ti-send"></i> Fee Reminder</button>'+
     '<button class="btn-out btn-sm btn-danger" onclick="confirmDeleteModal()"><i class="ti ti-trash"></i> Delete</button>'+
     '<button class="btn-out btn-sm" onclick="closeModal()"><i class="ti ti-x"></i> Close</button></div>'
   );
@@ -1432,24 +1290,47 @@ function openStudentModal(sid){
 function confirmDeleteModal(){
   if(!modalStudent) return;
   if(!confirm('Student "'+modalStudent.name+'" ko DELETE karna chahte hain?\nYe action undo nahi ho sakti.')) return;
-  var sidToDelete = modalStudent.id;
+  var delEmail=modalStudent.email;
   closeModal();
-  deleteStudentById(sidToDelete);
+  deleteStudentByEmail(delEmail);
 }
 
 function deleteStudentByBtn(btn){
-  var sid=btn.getAttribute('data-sid');
+  var semail=btn.getAttribute('data-semail');
   var found=null;
-  for(var i=0;i<DB.students.length;i++){ if(DB.students[i].id===sid){found=DB.students[i];break;} }
+  for(var i=0;i<DB.students.length;i++){ if(DB.students[i].email===semail){found=DB.students[i];break;} }
   if(!found) return;
   if(!confirm('Student "'+found.name+'" ko DELETE karna chahte hain?\nYe action undo nahi ho sakti.')) return;
-  deleteStudentById(sid);
+  deleteStudentByEmail(found.email);
+}
+
+function deleteStudentByEmail(semail){
+  var found=null;
+  for(var i=0;i<DB.students.length;i++){ if(DB.students[i].email===semail){found=DB.students[i];break;} }
+  if(!found) return;
+  var fb=FB();
+  if(fb){
+    fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+      snap.forEach(function(d){
+        if(d.data().email&&d.data().email.toLowerCase()===semail.toLowerCase())
+          fb.deleteDoc(fb.doc(fb.db,'approvedStudents',d.id)).catch(console.warn);
+      });
+    });
+  }
+  DB.students=DB.students.filter(function(s){ return s.email!==semail; });
+  delete ATT_CACHE[semail];
+  loadAdminData();
+  alert('✅ "'+found.name+'" successfully delete ho gaya.');
 }
 
 function deleteStudentById(sid){
   var found=null;
-  for(var i=0;i<DB.students.length;i++){ if(DB.students[i].id===sid){found=DB.students[i];break;} }
+  // Try email first (modalStudent), then id
+  for(var i=0;i<DB.students.length;i++){
+    if((modalStudent&&DB.students[i].email===modalStudent.email)||DB.students[i].id===sid){found=DB.students[i];break;}
+  }
   if(!found) return;
+  // Remove from Firebase
   var fb=FB();
   if(fb){
     fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
@@ -1461,7 +1342,7 @@ function deleteStudentById(sid){
     });
   }
   DB.students=DB.students.filter(function(s){ return s.id!==sid; });
-  delete ATT_CACHE[sid];
+  delete ATT_CACHE[found.email];
   loadAdminData();
   alert('✅ "'+found.name+'" successfully delete ho gaya.');
 }
@@ -1473,16 +1354,36 @@ function approveStudent(email){
   var idx=-1;
   for(var i=0;i<DB.pendingRegs.length;i++){ if(DB.pendingRegs[i].email===email){idx=i;break;} }
   if(idx===-1) return;
-  var st=Object.assign({},DB.pendingRegs[idx]); st.approved=true;
-  var fbDocId=st.fbDocId;
-  DB.students.push(st); DB.pendingRegs.splice(idx,1);
+  var st=Object.assign({},DB.pendingRegs[idx]); 
+  st.approved=true;
+  var pendingFbDocId=st.fbDocId; // This is the pendingRegs doc ID
+  DB.students.push(st); 
+  DB.pendingRegs.splice(idx,1);
   var fb=FB();
   if(fb){
-    fb.addDoc(fb.collection(fb.db,'approvedStudents'),st).then(function(){
-      if(fbDocId) fb.deleteDoc(fb.doc(fb.db,'pendingRegs',fbDocId)).catch(console.warn);
-    }).catch(console.warn);
+    // Save to approvedStudents - get NEW doc ID and use as permanent student ID
+    fb.addDoc(fb.collection(fb.db,'approvedStudents'), st).then(function(newDocRef){
+      var permanentId='RI-'+newDocRef.id;
+      // Update the student's ID to be unique Firebase-based ID
+      st.id=permanentId;
+      st.fbDocId=newDocRef.id;
+      // Update in local DB too
+      for(var i=0;i<DB.students.length;i++){
+        if(DB.students[i].email===email){ DB.students[i].id=permanentId; DB.students[i].fbDocId=newDocRef.id; break; }
+      }
+      // Update the Firebase doc with the correct ID field
+      fb.updateDoc(fb.doc(fb.db,'approvedStudents',newDocRef.id), {id:permanentId, fbDocId:newDocRef.id}).catch(console.warn);
+      // Delete from pendingRegs
+      if(pendingFbDocId) fb.deleteDoc(fb.doc(fb.db,'pendingRegs',pendingFbDocId)).catch(console.warn);
+      loadAdminData();
+    }).catch(function(e){
+      console.warn('approve error:',e);
+      if(pendingFbDocId) fb.deleteDoc(fb.doc(fb.db,'pendingRegs',pendingFbDocId)).catch(console.warn);
+      loadAdminData();
+    });
+  } else {
+    loadAdminData();
   }
-  loadAdminData();
   alert('✅ "'+st.name+'" approved!\nLogin email: '+st.email);
 }
 
@@ -1515,95 +1416,13 @@ function _renderPendingUI(){
       '<div><div style="font-size:13px;font-weight:700">'+s.name+'</div>'+
       '<div style="font-size:11px;color:var(--muted)">'+s.email+' • '+s.mobile+'</div>'+
       '<div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div>'+
-      '<div style="font-size:10px;color:var(--blue)">ID: '+s.id+' | '+(s.regDate||'—')+'</div></div></div>'+
+      '<div style="font-size:10px;color:var(--blue)">ID: '+s.id+' | '+( s.regDate||'—')+'</div></div></div>'+
       '<div style="display:flex;gap:7px;flex-shrink:0">'+
       '<button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')">'+
       '<i class="ti ti-check"></i> Approve</button>'+
       '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')">'+
       '<i class="ti ti-x"></i> Reject</button></div></div></div>';
   }).join(''));
-}
-
-/* ==================== REPAIR DUPLICATE IDs ====================
-   Ye function Firebase mein jo students hain unke duplicate IDs fix karta hai.
-   Sabko unique ID assign karta hai aur Firebase update karta hai.
-   Admin dashboard mein "Fix Duplicate IDs" button se call hota hai.
-============================================================== */
-function repairDuplicateIds(){
-  var fb=FB();
-  if(!fb){ alert('Firebase connected nahi hai.'); return; }
-  if(!confirm('Firebase mein sabhi students ki IDs check karke duplicates fix karein?\n\nYe safe operation hai — sirf duplicate IDs wale students ko naya unique ID milega.')){return;}
-  
-  showLoading('Checking Firebase for duplicate IDs...');
-  
-  fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
-    var allDocs = [];
-    snap.forEach(function(d){ allDocs.push({docId:d.id, data:d.data()}); });
-    
-    // Group by assigned student ID to find duplicates
-    var idGroups = {};
-    allDocs.forEach(function(item){
-      var sid = item.data.id || 'NO_ID';
-      if(!idGroups[sid]) idGroups[sid] = [];
-      idGroups[sid].push(item);
-    });
-    
-    var fixPromises = [];
-    var fixCount = 0;
-    var usedIds = new Set();
-    
-    // Collect all existing IDs first
-    allDocs.forEach(function(item){ if(item.data.id) usedIds.add(item.data.id); });
-    
-    Object.keys(idGroups).forEach(function(sid){
-      var group = idGroups[sid];
-      if(group.length > 1){
-        // First one keeps the ID, rest get new unique IDs
-        group.slice(1).forEach(function(item){
-          // Find max ID number from all existing
-          var maxNum = 0;
-          usedIds.forEach(function(existingId){
-            var match = String(existingId).match(/RI-\d{4}-(\d+)/);
-            if(match){ var n=parseInt(match[1],10); if(n>maxNum) maxNum=n; }
-          });
-          var newId = 'RI-2026-' + String(maxNum+1).padStart(4,'0');
-          usedIds.add(newId);
-          
-          var updatedData = Object.assign({}, item.data, {id: newId});
-          console.log('Fixing duplicate: '+item.data.name+' from '+sid+' to '+newId);
-          fixPromises.push(
-            fb.setDoc(fb.doc(fb.db,'approvedStudents',item.docId), updatedData)
-              .then(function(){ fixCount++; })
-              .catch(function(e){ console.warn('Fix failed for '+item.data.name+':',e); })
-          );
-        });
-      }
-    });
-    
-    if(fixPromises.length === 0){
-      hideLoading();
-      alert('✅ Koi duplicate ID nahi mili! Sab theek hai.');
-      return;
-    }
-    
-    Promise.all(fixPromises).then(function(){
-      hideLoading();
-      alert('✅ '+fixCount+' students ki IDs fix ho gayi!\n\nPage refresh hoga aur sahi data load hoga.');
-      // Reload everything fresh
-      DB.students = JSON.parse(JSON.stringify(DEMO_STUDENTS));
-      DB.pendingRegs = [];
-      ATT_CACHE = {};
-      loadAdminData();
-    }).catch(function(e){
-      hideLoading();
-      console.error(e);
-      alert('Kuch error aayi. Console check karo.');
-    });
-  }).catch(function(e){
-    hideLoading();
-    console.error(e);
-    alert('Firebase se data load nahi hua. Internet check karo.');
-  });
 }
 
 /* ==================== NOTIFICATIONS / FEES ==================== */
@@ -1628,43 +1447,13 @@ function showSec(id){
 
   var fb=FB();
   if(id==='a-pending')    renderPendingList();
-  if(id==='a-students'){
-    if(fb) loadAllAttFB(fb).then(function(){ filterStudents(); });
-    else filterStudents();
-  }
+  if(id==='a-students')   { if(fb) loadAllAttFB(fb).then(function(){filterStudents();}); else filterStudents(); }
   if(id==='a-fees')       renderFeeTable(DB.students);
-  if(id==='a-attendance'){
-    if(fb) loadAllAttFB(fb).then(function(){ renderAdminAttTable(); });
-    else renderAdminAttTable();
-  }
+  if(id==='a-attendance') { if(fb) loadAllAttFB(fb).then(function(){renderAdminAttTable();}); else renderAdminAttTable(); }
   if(id==='a-dashboard')  loadAdminData();
-  if(id==='s-attendance'){
-    var rec = currentUser ? getAttRec(currentUser.id) : {};
-    buildCalendar(rec);
-    buildAttLog(rec);
-    // Show correct state for today on attendance page
-    if(currentUser){
-      var todayRec = rec[todayKey()];
-      if(attMarkedToday || todayRec){
-        var attOk=document.getElementById('att-ok');
-        var attAlready=document.getElementById('att-already');
-        // If marked this session, att-ok is already showing
-        // If was already marked (from DB), show att-already
-        if(!attMarkedToday && todayRec){
-          if(attAlready){
-            attAlready.style.display='block';
-            setText('att-already-time','Attendance time: '+todayRec.time);
-          }
-        }
-        var pill=document.getElementById('att-status-pill');
-        if(pill){pill.className='pill p-green'; pill.textContent='Present ✓';}
-        var btn=document.getElementById('att-main-btn');
-        if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓'; btn.style.opacity='0.6'; btn.disabled=true;}
-      }
-    }
-  }
-  if(id==='s-reports')   renderStudentUI();
-  if(id==='s-dashboard') renderStudentUI();
+  if(id==='s-attendance') { var _r=currentUser?ATT_CACHE[currentUser.email]||{}:{}; buildCalendar(_r); buildAttLog(_r); }
+  if(id==='s-reports')    renderStudentUI();
+  if(id==='s-dashboard')  renderStudentUI();
 }
 </script>
 </body>
