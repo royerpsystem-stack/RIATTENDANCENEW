@@ -386,7 +386,7 @@ textarea.finput{resize:vertical;min-height:80px}
           </div>
         </div>
         <div class="card"><div class="tbl-wrap"><table>
-          <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Batch</th><th class="hide-mob">Mobile</th><th>Present</th><th>Absent</th><th>Att%</th><th>Fee</th><th>Action</th></tr></thead>
+          <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Batch</th><th class="hide-mob">Mobile</th><th>Present</th><th>Absent</th><th>Att%</th><th>Today</th><th>Fee</th><th>Action</th></tr></thead>
           <tbody id="student-tbody"></tbody>
         </table></div></div>
       </div>
@@ -405,7 +405,7 @@ textarea.finput{resize:vertical;min-height:80px}
           </div>
         </div>
         <div class="card"><div class="tbl-wrap"><table>
-          <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Slot</th><th>Total Present</th><th>Total Absent</th><th>Att%</th><th>Today</th></tr></thead>
+          <thead><tr><th>Student</th><th>Course</th><th class="hide-mob">Slot</th><th>Present</th><th>Absent</th><th>Att%</th><th class="hide-mob">Time</th><th>Today</th></tr></thead>
           <tbody id="admin-att-body"></tbody>
         </table></div></div>
       </div>
@@ -489,597 +489,901 @@ window._fbReady=true;
 document.dispatchEvent(new Event('fbReady'));
 </script>
 
+
 <script>
 /* ==================== STATE ==================== */
-var ADMIN_CREDS={email:'admin@royinfotech.in',password:'admin123'};
-var DEMO_STUDENTS=[
-  {id:'RI-2026-0001',name:'Priya Sharma',father:'Suresh Sharma',mobile:'9812345678',email:'priya@gmail.com',dob:'2005-03-12',gender:'Female',course:'DCA',slot:'11:00 AM',address:'456 Park Road, Gaya',password:'priya123',present:24,absent:1,feeStatus:'Paid',feeAmt:1000,approved:true},
-  {id:'RI-2026-0002',name:'Arjun Mishra',father:'Vinod Mishra',mobile:'9823456789',email:'arjun@gmail.com',dob:'2004-07-20',gender:'Male',course:'TALLY',slot:'02:00 PM',address:'789 MG Road, Gaya',password:'arjun123',present:18,absent:7,feeStatus:'Overdue',feeAmt:800,approved:true},
-  {id:'RI-2026-0003',name:'Sunita Gupta',father:'Mohan Gupta',mobile:'9834567890',email:'sunita@gmail.com',dob:'2006-01-05',gender:'Female',course:'ADCA+',slot:'09:00 AM',address:'12 Station Rd, Gaya',password:'sunita123',present:23,absent:2,feeStatus:'Paid',feeAmt:1500,approved:true}
+var ADMIN_CREDS = { email:'admin@royinfotech.in', password:'admin123' };
+
+var DEMO_STUDENTS = [
+  {id:'RI-2026-0001',name:'Priya Sharma', father:'Suresh Sharma',mobile:'9812345678',email:'priya@gmail.com', dob:'2005-03-12',gender:'Female',course:'DCA',  slot:'11:00 AM',address:'456 Park Road, Gaya',    password:'priya123', feeStatus:'Paid',    feeAmt:1000,approved:true},
+  {id:'RI-2026-0002',name:'Arjun Mishra', father:'Vinod Mishra', mobile:'9823456789',email:'arjun@gmail.com', dob:'2004-07-20',gender:'Male',  course:'TALLY',slot:'02:00 PM',address:'789 MG Road, Gaya',    password:'arjun123', feeStatus:'Overdue', feeAmt:800, approved:true},
+  {id:'RI-2026-0003',name:'Sunita Gupta', father:'Mohan Gupta',  mobile:'9834567890',email:'sunita@gmail.com',dob:'2006-01-05',gender:'Female',course:'ADCA+',slot:'09:00 AM',address:'12 Station Rd, Gaya',  password:'sunita123',feeStatus:'Paid',    feeAmt:1500,approved:true}
 ];
-var DB={students:JSON.parse(JSON.stringify(DEMO_STUDENTS)),pendingRegs:[],notifications:[
-  {type:'amber',icon:'ti-alert-circle',title:'Fee Reminder',msg:'Monthly fee due on 15th May 2026',time:'Today'},
-  {type:'blue',icon:'ti-info-circle',title:'Holiday Notice',msg:'Institute closed on 20th May',time:'Yesterday'},
-  {type:'green',icon:'ti-certificate',title:'Course Update',msg:'Tally Advanced batch starts June 1st',time:'2 days ago'}
-]};
 
-// KEY FIX: attendance stored per student: { "YYYY-MM-DD": { status, time, method } }
-var ATT_CACHE = {};  // ATT_CACHE[studentId] = { "2026-05-14": {status:'Present', time:'10:02 AM', method:'QR'}, ... }
+var DB = {
+  students: JSON.parse(JSON.stringify(DEMO_STUDENTS)),
+  pendingRegs: [],
+  notifications: [
+    {type:'amber',icon:'ti-alert-circle',title:'Fee Reminder',    msg:'Monthly fee due on 15th May 2026',         time:'Today'},
+    {type:'blue', icon:'ti-info-circle',  title:'Holiday Notice', msg:'Institute closed on 20th May (Exams)',     time:'Yesterday'},
+    {type:'green',icon:'ti-certificate',  title:'Course Update',  msg:'Tally Advanced batch starts June 1st',     time:'2 days ago'}
+  ]
+};
 
-var currentUser=null, isAdmin=false, loginMode='student', idCounter=4;
+/*
+  ATT_CACHE[studentId][dateKey] = { status, time, method, studentId, dateKey }
+  ONLY the logged-in student's own data goes into ATT_CACHE[currentUser.id]
+  Admin loads ALL students via loadAllAttFB()
+  NEVER mix one student's records into another's cache key.
+*/
+var ATT_CACHE = {};
+
+var currentUser = null;
+var isAdmin     = false;
+var loginMode   = 'student';
+var idCounter   = 4;
+var attMarkedToday = false; // local guard for this session
 
 /* ==================== FIREBASE INIT ==================== */
 document.addEventListener('fbReady', function(){
   loadApprovedStudentsFB();
 });
 
-function loadApprovedStudentsFB(){
-  if(!window._fb) return;
-  window._fb.getDocs(window._fb.collection(window._fb.db,'approvedStudents')).then(function(snap){
-    snap.forEach(function(d){
-      var data=d.data(); data.fbDocId=d.id; data.approved=true;
-      if(!DB.students.find(s=>s.email.toLowerCase()===data.email.toLowerCase())) DB.students.push(data);
-    });
-  }).catch(function(e){console.warn('loadApproved:',e);});
-}
+function FB(){ return window._fb || null; }
 
 /* ==================== HELPERS ==================== */
-function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
-function pad(n){ return String(n).padStart(2,'0'); }
-function todayStr(){ return new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}); }
+function todayKey(){
+  var d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function todayStr(){
+  return new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+}
+function pad(n){ return n<10?'0'+n:String(n); }
+function initials(name){ return name?name.trim().split(/\s+/).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase():'??'; }
 function greeting(){ var h=new Date().getHours(); return h<12?'Morning':h<17?'Afternoon':'Evening'; }
-function initials(name){ return name?name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase():'??'; }
-function avatarColor(i){ var c=['linear-gradient(135deg,#1a73e8,#4f98f0)','linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#6c47ff,#a78bfa)','linear-gradient(135deg,#ef4444,#f87171)']; return c[i%c.length]; }
-function presentCount(rec){ return Object.keys(rec||{}).filter(k=>(rec[k].status||'Present')==='Present').length; }
-function absentCount(rec){ return Object.keys(rec||{}).filter(k=>(rec[k].status||'Present')==='Absent').length; }
-function getP(s){ var r=ATT_CACHE[s.id]; if(r===undefined) return (s.present||0); return presentCount(r); }
-function getAb(s){ var r=ATT_CACHE[s.id]; if(r===undefined) return (s.absent||0); return absentCount(r); }
-function getPct(s){ var p=getP(s),ab=getAb(s),t=p+ab; return t?Math.round(p/t*100):0; }
+function avatarColor(i){
+  var c=['linear-gradient(135deg,#1a73e8,#4f98f0)','linear-gradient(135deg,#10b981,#34d399)',
+         'linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#6c47ff,#a78bfa)',
+         'linear-gradient(135deg,#ef4444,#f87171)'];
+  return c[i%c.length];
+}
+function courseColor(c){
+  var m={ADCA:'p-purple','ADCA+':'p-purple',DCA:'p-blue',TALLY:'p-amber',DTP:'p-blue',
+         HTML:'p-green',CSS:'p-green',JS:'p-amber',MIS:'p-blue',CYBERCAFE:'p-gray',TYPING:'p-gray',OTHER:'p-gray'};
+  return m[c]||'p-gray';
+}
 function feeColor(f){ return f==='Paid'?'p-green':f==='Overdue'?'p-red':'p-amber'; }
-function courseColor(c){ var m={ADCA:'p-purple','ADCA+':'p-purple',DCA:'p-blue',TALLY:'p-amber',DTP:'p-blue',HTML:'p-green',CSS:'p-green',JS:'p-amber',MIS:'p-blue',CYBERCAFE:'p-gray',TYPING:'p-gray',OTHER:'p-gray'}; return m[c]||'p-gray'; }
-function setText(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
-function setHTML(id,v){ var e=document.getElementById(id); if(e) e.innerHTML=v; }
-function showEl(id,d){ var e=document.getElementById(id); if(e) e.style.display=d||'block'; }
-function hideEl(id){ var e=document.getElementById(id); if(e) e.style.display='none'; }
-function showErr(id,msg){ var e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
-function setScreen(id){ ['scr-login','scr-reg','scr-app'].forEach(s=>document.getElementById(s).classList.remove('show')); document.getElementById(id).classList.add('show'); }
-function showLoading(t){ document.getElementById('loading-overlay').style.display='flex'; document.getElementById('loading-text').textContent=t||'Loading...'; }
+
+/* Count present/absent from a student's OWN record map */
+function countPresent(rec){ 
+  var n=0; 
+  Object.keys(rec||{}).forEach(function(k){ if((rec[k].status||'Present')==='Present') n++; }); 
+  return n; 
+}
+function countAbsent(rec){ 
+  var n=0; 
+  Object.keys(rec||{}).forEach(function(k){ if(rec[k].status==='Absent') n++; }); 
+  return n; 
+}
+/* For a given student object, get counts from ATT_CACHE if loaded, else from .present/.absent */
+function getP(sid){  var r=ATT_CACHE[sid]; return r!==undefined ? countPresent(r) : 0; }
+function getAb(sid){ var r=ATT_CACHE[sid]; return r!==undefined ? countAbsent(r)  : 0; }
+function getPct(sid){ var p=getP(sid),ab=getAb(sid),t=p+ab; return t?Math.round(p/t*100):0; }
+
+function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+function setHTML(id,v){ var el=document.getElementById(id); if(el) el.innerHTML=v; }
+function showEl(id){ var el=document.getElementById(id); if(el) el.style.display=''; }
+function hideEl(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }
+function showLoading(t){ document.getElementById('loading-overlay').style.display='flex'; setText('loading-text',t||'Loading...'); }
 function hideLoading(){ document.getElementById('loading-overlay').style.display='none'; }
-function updatePendingBadge(){ var n=DB.pendingRegs.length; var el=document.getElementById('pending-cnt'); if(el){el.textContent=n;el.style.display=n>0?'':'none';} var nb=document.getElementById('nb'); if(nb) nb.textContent=n+DB.notifications.length; }
-function initQR(){ var g=document.getElementById('qr-grid'); if(!g) return; var pat=[1,1,1,0,1,1,1,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0]; g.innerHTML=pat.map(b=>'<div class="qr-px" style="background:'+(b?'#1a1f36':'#fff')+'"></div>').join(''); var qd=document.getElementById('qr-date'); if(qd) qd.textContent=todayStr(); }
+function setScreen(id){
+  ['scr-login','scr-reg','scr-app'].forEach(function(s){ document.getElementById(s).classList.remove('show'); });
+  document.getElementById(id).classList.add('show');
+}
+function updatePendingBadge(){
+  var n=DB.pendingRegs.length;
+  var el=document.getElementById('pending-cnt');
+  if(el){el.textContent=n; el.style.display=n>0?'':'none';}
+  var nb=document.getElementById('nb');
+  if(nb) nb.textContent=n+DB.notifications.length;
+}
+
+/* ==================== FIREBASE: LOAD APPROVED STUDENTS ==================== */
+function loadApprovedStudentsFB(){
+  var fb=FB(); if(!fb) return;
+  fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+    snap.forEach(function(d){
+      var data=d.data(); data.fbDocId=d.id; data.approved=true;
+      // Only add if not already in DB (avoid duplicate with demo students)
+      var exists=DB.students.some(function(s){ return s.email.toLowerCase()===data.email.toLowerCase(); });
+      if(!exists) DB.students.push(data);
+    });
+  }).catch(function(e){ console.warn('loadApprovedStudentsFB error:',e); });
+}
 
 /* ==================== AUTH ==================== */
-function setLTab(m){ loginMode=m; document.querySelectorAll('#ltabs .tab').forEach((t,i)=>t.classList.toggle('active',(m==='student'&&i===0)||(m==='admin'&&i===1))); }
-function goReg(){ setScreen('scr-reg'); }
+function setLTab(m){
+  loginMode=m;
+  document.querySelectorAll('#ltabs .tab').forEach(function(t,i){
+    t.classList.toggle('active',(m==='student'&&i===0)||(m==='admin'&&i===1));
+  });
+}
+function goReg(){   setScreen('scr-reg');   }
 function goLogin(){ setScreen('scr-login'); }
-function doLogout(){ currentUser=null; isAdmin=false; ATT_CACHE={}; setScreen('scr-login'); }
+function doLogout(){
+  currentUser=null; isAdmin=false; ATT_CACHE={}; attMarkedToday=false;
+  setScreen('scr-login');
+}
 
 function doLogin(){
   var email=(document.getElementById('li-email').value||'').trim().toLowerCase();
-  var pass=(document.getElementById('li-pass').value||'').trim();
+  var pass =(document.getElementById('li-pass').value ||'').trim();
   hideEl('login-err');
-  if(!email||!pass){showErr('login-err','Please enter email and password.');return;}
+  if(!email||!pass){ showLoginErr('Please enter email and password.'); return; }
+
   if(loginMode==='admin'){
-    if(email===ADMIN_CREDS.email.toLowerCase()&&pass===ADMIN_CREDS.password){isAdmin=true;currentUser={name:'Admin',email:ADMIN_CREDS.email};launchApp();}
-    else showErr('login-err','Invalid admin credentials.');
+    if(email===ADMIN_CREDS.email.toLowerCase()&&pass===ADMIN_CREDS.password){
+      isAdmin=true; currentUser={name:'Admin',email:ADMIN_CREDS.email}; launchApp();
+    } else { showLoginErr('Invalid admin credentials.'); }
     return;
   }
-  var found=DB.students.find(s=>s.email.toLowerCase()===email&&s.password===pass&&s.approved);
-  if(found){isAdmin=false;currentUser=found;launchApp();return;}
-  var pend=DB.pendingRegs.find(s=>s.email.toLowerCase()===email&&s.password===pass);
-  if(pend){showErr('login-err','Registration pending admin approval.');return;}
-  if(!window._fb){showErr('login-err','Email or password incorrect.');return;}
-  showLoading('Verifying...');
-  window._fb.getDocs(window._fb.collection(window._fb.db,'approvedStudents')).then(function(snap){
-    hideLoading();
-    var found2=null;
-    snap.forEach(function(d){var data=d.data();if(data.email&&data.email.toLowerCase()===email&&data.password===pass&&data.approved) found2=data;});
-    if(found2){
-      if(!DB.students.find(s=>s.email.toLowerCase()===email)) DB.students.push(found2);
-      isAdmin=false;currentUser=found2;launchApp();
-    } else {
-      window._fb.getDocs(window._fb.collection(window._fb.db,'pendingRegs')).then(function(snap2){
-        var ip=false; snap2.forEach(function(d){var data=d.data();if(data.email&&data.email.toLowerCase()===email) ip=true;});
-        showErr('login-err',ip?'Registration pending admin approval.':'Email or password incorrect. Register first.');
-      }).catch(function(){showErr('login-err','Email or password incorrect.');});
+
+  // Student login — search approved students
+  var found=null;
+  for(var i=0;i<DB.students.length;i++){
+    var st=DB.students[i];
+    if(st.email.toLowerCase()===email && st.password===pass && st.approved){
+      found=st; break;
     }
-  }).catch(function(){hideLoading();showErr('login-err','Login failed. Check internet.');});
+  }
+
+  if(found){ isAdmin=false; currentUser=found; launchApp(); return; }
+
+  // Check pending
+  var isPending=DB.pendingRegs.some(function(s){ return s.email.toLowerCase()===email; });
+  if(isPending){ showLoginErr('Registration pending admin approval.'); return; }
+
+  // Try Firebase directly (handles newly approved students not yet in local cache)
+  var fb=FB();
+  if(fb){
+    showLoading('Verifying...');
+    fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+      hideLoading();
+      var fbFound=null;
+      snap.forEach(function(d){
+        var data=d.data();
+        if(data.email&&data.email.toLowerCase()===email&&data.password===pass&&data.approved){
+          data.fbDocId=d.id; fbFound=data;
+        }
+      });
+      if(fbFound){
+        var dup=DB.students.some(function(s){ return s.email.toLowerCase()===email; });
+        if(!dup) DB.students.push(fbFound);
+        isAdmin=false; currentUser=fbFound; launchApp();
+      } else {
+        fb.getDocs(fb.collection(fb.db,'pendingRegs')).then(function(s2){
+          var pend=false;
+          s2.forEach(function(d){ if(d.data().email&&d.data().email.toLowerCase()===email) pend=true; });
+          showLoginErr(pend?'Registration pending admin approval.':'Email/password incorrect. Please register first.');
+        }).catch(function(){ showLoginErr('Email/password incorrect. Please register first.'); });
+      }
+    }).catch(function(){ hideLoading(); showLoginErr('Login failed. Check your internet.'); });
+  } else {
+    showLoginErr('Email/password incorrect. Please register first.');
+  }
 }
+
+function showLoginErr(msg){ var el=document.getElementById('login-err'); if(el){el.textContent=msg; el.style.display='block';} }
 
 /* ==================== REGISTER ==================== */
 function doRegister(){
-  var name=document.getElementById('r-name').value.trim(), father=document.getElementById('r-father').value.trim();
-  var mobile=document.getElementById('r-mobile').value.trim(), email=document.getElementById('r-email').value.trim().toLowerCase();
-  var dob=document.getElementById('r-dob').value, gender=document.getElementById('r-gender').value;
-  var course=document.getElementById('r-course').value, slot=document.getElementById('r-slot').value;
-  var addr=document.getElementById('r-addr').value.trim(), pass=document.getElementById('r-pass').value, pass2=document.getElementById('r-pass2').value;
-  hideEl('reg-err');hideEl('reg-ok');
-  if(!name||!father||!mobile||!email||!course||!slot||!pass){showErr('reg-err','Please fill all required (*) fields.');return;}
-  if(!/^\d{10}$/.test(mobile)){showErr('reg-err','Enter valid 10-digit mobile number.');return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('reg-err','Enter valid email address.');return;}
-  if(pass.length<6){showErr('reg-err','Password minimum 6 characters.');return;}
-  if(pass!==pass2){showErr('reg-err','Passwords do not match.');return;}
-  if(DB.students.find(s=>s.email.toLowerCase()===email)||DB.pendingRegs.find(s=>s.email.toLowerCase()===email)){showErr('reg-err','Email already registered.');return;}
+  var name  =document.getElementById('r-name').value.trim();
+  var father=document.getElementById('r-father').value.trim();
+  var mobile=document.getElementById('r-mobile').value.trim();
+  var email =document.getElementById('r-email').value.trim().toLowerCase();
+  var dob   =document.getElementById('r-dob').value;
+  var gender=document.getElementById('r-gender').value;
+  var course=document.getElementById('r-course').value;
+  var slot  =document.getElementById('r-slot').value;
+  var addr  =document.getElementById('r-addr').value.trim();
+  var pass  =document.getElementById('r-pass').value;
+  var pass2 =document.getElementById('r-pass2').value;
+  hideEl('reg-err'); hideEl('reg-ok');
+
+  if(!name||!father||!mobile||!email||!course||!slot||!pass){ showRegErr('Please fill all required (*) fields.'); return; }
+  if(!/^\d{10}$/.test(mobile)){ showRegErr('Enter a valid 10-digit mobile number.'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showRegErr('Enter a valid email address.'); return; }
+  if(pass.length<6){ showRegErr('Password must be at least 6 characters.'); return; }
+  if(pass!==pass2){ showRegErr('Passwords do not match.'); return; }
+
+  var emailTaken=DB.students.some(function(s){ return s.email.toLowerCase()===email; }) ||
+                 DB.pendingRegs.some(function(s){ return s.email.toLowerCase()===email; });
+  if(emailTaken){ showRegErr('This email is already registered.'); return; }
+
   var newId='RI-2026-'+String(idCounter).padStart(4,'0'); idCounter++;
-  var student={id:newId,name,father,mobile,email,dob,gender,course,slot,address:addr,password:pass,present:0,absent:0,feeStatus:'Pending',feeAmt:(course==='ADCA'||course==='ADCA+')?1200:course==='DCA'?1000:800,approved:false,regDate:todayStr()};
-  var btn=document.getElementById('reg-btn'); btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> Submitting...';
-  function onOk(docId){
+  var student={
+    id:newId,name:name,father:father,mobile:mobile,email:email,dob:dob,
+    gender:gender,course:course,slot:slot,address:addr,password:pass,
+    feeStatus:'Pending',
+    feeAmt:(course==='ADCA'||course==='ADCA+')?1200:(course==='DCA'?1000:800),
+    approved:false, regDate:todayStr()
+  };
+
+  var btn=document.getElementById('reg-btn');
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader"></i> Submitting...';
+
+  function onSuccess(docId){
     if(docId) student.fbDocId=docId;
-    DB.pendingRegs.push(student);updatePendingBadge();
+    DB.pendingRegs.push(student);
+    updatePendingBadge();
     var ok=document.getElementById('reg-ok');
-    ok.innerHTML='✅ Registration submitted!<br><b>Your ID: '+newId+'</b><br>Awaiting admin approval.';
+    ok.innerHTML='✅ Registered! <b>ID: '+newId+'</b><br>Awaiting admin approval.';
     ok.style.display='block';
-    btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus"></i> Register &amp; Submit';
-    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(id=>{document.getElementById(id).value='';});
-    ['r-gender','r-course','r-slot'].forEach(id=>{document.getElementById(id).value='';});
+    btn.disabled=false; btn.innerHTML='<i class="ti ti-user-plus"></i> Register &amp; Submit';
+    ['r-name','r-father','r-mobile','r-email','r-dob','r-addr','r-pass','r-pass2'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('r-gender').value='';
+    document.getElementById('r-course').value='';
+    document.getElementById('r-slot').value='';
   }
-  if(window._fb){window._fb.addDoc(window._fb.collection(window._fb.db,'pendingRegs'),student).then(function(ref){onOk(ref.id);}).catch(function(){onOk(null);});}
-  else onOk(null);
+
+  var fb=FB();
+  if(fb){
+    fb.addDoc(fb.collection(fb.db,'pendingRegs'),student)
+      .then(function(ref){ onSuccess(ref.id); })
+      .catch(function(){ onSuccess(null); });
+  } else { onSuccess(null); }
 }
+function showRegErr(msg){ var el=document.getElementById('reg-err'); if(el){el.textContent=msg; el.style.display='block';} }
 
 /* ==================== LAUNCH ==================== */
 function launchApp(){
   setScreen('scr-app');
-  setText('mode-lbl',isAdmin?'Admin':'Student');
-  document.getElementById('admin-nav').style.display=isAdmin?'block':'none';
-  ['nav-s-dashboard','nav-s-attendance','nav-s-reports','nav-s-profile','nav-s-notifications'].forEach(id=>{var el=document.getElementById(id);if(el) el.style.display=isAdmin?'none':'';});
-  initQR();updatePendingBadge();
-  if(isAdmin){loadAdminData();showSec('a-dashboard');}
-  else{loadStudentAttFB();}
+  setText('mode-lbl', isAdmin?'Admin':'Student');
+  document.getElementById('admin-nav').style.display = isAdmin?'block':'none';
+  ['nav-s-dashboard','nav-s-attendance','nav-s-reports','nav-s-profile','nav-s-notifications'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display=isAdmin?'none':'';
+  });
+  initQR(); updatePendingBadge();
+  if(isAdmin){ loadAdminData(); showSec('a-dashboard'); }
+  else        { loadStudentAttFB(); }
 }
 
-/* ==================== ★ LOAD STUDENT ATTENDANCE FROM FIREBASE ==================== */
+function initQR(){
+  var g=document.getElementById('qr-grid'); if(!g) return;
+  var pat=[1,1,1,0,1,1,1,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0];
+  g.innerHTML=pat.map(function(b){ return '<div class="qr-px" style="background:'+(b?'#1a1f36':'#fff')+'"></div>'; }).join('');
+  var qd=document.getElementById('qr-date'); if(qd) qd.textContent=todayStr();
+}
+
+/* ==================== STUDENT: LOAD OWN ATTENDANCE FROM FIREBASE ==================== */
+/*
+  KEY FIX: We ONLY load records where studentId === currentUser.id
+  This prevents one student's attendance from showing up in another student's view.
+*/
 function loadStudentAttFB(){
-  if(!window._fb||!currentUser){renderStudentUI();showSec('s-dashboard');return;}
-  showLoading('Loading your attendance data...');
-  var fb=window._fb;
-  var q2=fb.query(fb.collection(fb.db,'attendance_records'),fb.where('studentId','==',currentUser.id));
-  fb.getDocs(q2).then(function(snap){
+  var fb=FB();
+  if(!fb||!currentUser){ renderStudentUI(); showSec('s-dashboard'); return; }
+  showLoading('Loading your attendance...');
+  var q=fb.query(fb.collection(fb.db,'attendance_records'), fb.where('studentId','==',currentUser.id));
+  fb.getDocs(q).then(function(snap){
     hideLoading();
     var rec={};
-    snap.forEach(function(d){var data=d.data();if(data.dateKey) rec[data.dateKey]=data;});
+    snap.forEach(function(d){
+      var dd=d.data();
+      // Double-check: only store if studentId matches (extra safety)
+      if(dd.studentId===currentUser.id){
+        var key=dd.dateKey||d.id;
+        rec[key]=dd;
+      }
+    });
     ATT_CACHE[currentUser.id]=rec;
-    // Sync counts
-    if(Object.keys(rec).length>0){
-      currentUser.present=presentCount(rec);
-      currentUser.absent=absentCount(rec);
-    }
+    // Check if already marked today
+    if(rec[todayKey()]){ attMarkedToday=true; }
+    currentUser.present=countPresent(rec);
+    currentUser.absent=countAbsent(rec);
     renderStudentUI();
     showSec('s-dashboard');
+    buildCalendar(rec);
+    buildAttLog(rec);
   }).catch(function(e){
-    hideLoading();console.warn('loadStudentAtt:',e);
-    renderStudentUI();showSec('s-dashboard');
+    hideLoading(); console.warn('loadStudentAttFB error:',e);
+    ATT_CACHE[currentUser.id]={};
+    renderStudentUI(); showSec('s-dashboard');
   });
 }
 
-/* ==================== ★ RENDER STUDENT UI ==================== */
+/* ==================== STUDENT UI ==================== */
 function renderStudentUI(){
   var s=currentUser; if(!s) return;
   var rec=ATT_CACHE[s.id]||{};
-  var p=presentCount(rec)||s.present||0;
-  var ab=absentCount(rec)||s.absent||0;
-  if(Object.keys(rec).length===0&&(s.present||0)>0){p=s.present;ab=s.absent;}
-  var total=p+ab, pc=total?Math.round(p/total*100):0;
-  var today=todayKey(), todayRec=rec[today];
+  var p=countPresent(rec), ab=countAbsent(rec), total=p+ab, pc=total?Math.round(p/total*100):0;
 
-  // TODAY BANNER — KEY FIX: show if already marked
-  var banner=document.getElementById('today-banner');
-  var mainBtn=document.getElementById('att-main-btn');
-  if(todayRec&&todayRec.status==='Present'){
-    if(banner){banner.className='att-banner banner-ok';banner.innerHTML='<i class="ti ti-circle-check" style="font-size:18px"></i><div><b>Aaj ki attendance mark ho chuki hai ✅</b><br><span style="font-size:11px">'+todayRec.time+' baje mark ki gayi</span></div>';banner.style.display='flex';}
-    if(mainBtn){mainBtn.innerHTML='<i class="ti ti-check"></i> Marked ✓';mainBtn.style.opacity='0.6';mainBtn.disabled=true;}
-    showEl('att-ok');setText('att-marked-info',todayStr()+' • '+todayRec.time);
-    document.getElementById('att-status-pill').className='pill p-green';setText('att-status-pill','Present ✓');
-  } else {
-    if(banner){banner.className='att-banner banner-warn';banner.innerHTML='<i class="ti ti-clock" style="font-size:18px"></i><div><b>Aaj ki attendance mark nahi hui</b><br><span style="font-size:11px">Abhi mark karein!</span></div>';banner.style.display='flex';}
-    if(mainBtn){mainBtn.innerHTML='<i class="ti ti-check"></i> Mark Present';mainBtn.style.opacity='';mainBtn.disabled=false;}
-    hideEl('att-ok');hideEl('att-already');
-    document.getElementById('att-status-pill').className='pill p-amber';setText('att-status-pill','Not Marked');
-  }
-
-  // Stats
-  setText('d-present',p);setText('d-absent',ab);setText('d-pct',pc+'%');setText('d-total',total);
-  setText('circ-pct',pc+'%');document.getElementById('att-ring').setAttribute('stroke-dasharray',Math.round(pc/100*220)+' 220');
-  setText('ov-p',p+' days');setText('ov-a',ab+' days');
-  document.getElementById('pb1').style.width=pc+'%';document.getElementById('pb2').style.width=(100-pc)+'%';
-
-  // Course + fee
-  setText('course-name',s.course);setText('course-slot',s.slot);setText('course-id',s.id);
-  setHTML('fee-status-lbl','<span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span>');
-  if(s.feeStatus!=='Paid'){showEl('fee-alert-box','flex');setText('fee-alert-txt','Monthly fee of ₹'+s.feeAmt+' is due.');}
-  else hideEl('fee-alert-box');
-
-  // Greeting
   setText('dash-greet','Good '+greeting()+', '+s.name.split(' ')[0]+'! 👋');
-  setText('dash-sub',s.course+' • '+s.slot+' Batch');
+  setText('dash-sub',  s.course+' • '+s.slot+' Batch');
+  setText('d-present', p);
+  setText('d-absent',  ab);
+  setText('d-pct',     pc+'%');
+  setText('d-total',   total);
+  setText('circ-pct',  pc+'%');
+  document.getElementById('att-ring').setAttribute('stroke-dasharray',Math.round(pc/100*220)+' 220');
+  setText('ov-p',  p+' days');
+  setText('ov-a',  ab+' days');
+  document.getElementById('pb1').style.width=pc+'%';
+  document.getElementById('pb2').style.width=(100-pc)+'%';
+  setText('course-name', s.course);
+  setText('course-slot', s.slot);
+  setText('course-id',   s.id);
+  setHTML('fee-status-lbl','<span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span>');
+  if(s.feeStatus!=='Paid'){
+    document.getElementById('fee-alert-box').style.display='flex';
+    setText('fee-alert-txt','Monthly fee of ₹'+s.feeAmt+' is due. Please pay to avoid suspension.');
+  } else {
+    document.getElementById('fee-alert-box').style.display='none';
+  }
+  var ini=initials(s.name);
+  setText('prof-av', ini); setText('card-av', ini);
+  setText('prof-name', s.name); setText('prof-id', 'Student ID: '+s.id);
+  setText('card-name',   s.name);
+  setText('card-course', s.course+' • '+s.slot);
+  setText('card-id',     'ID: '+s.id);
 
-  // Profile
-  var initl=initials(s.name);
-  setText('prof-av',initl);setText('card-av',initl);setText('prof-name',s.name);setText('prof-id','Student ID: '+s.id);
-  setText('card-name',s.name);setText('card-course',s.course+' • '+s.slot);setText('card-id','ID: '+s.id);
-  setHTML('prof-details',[['Father',s.father],['Mobile',s.mobile],['Email',s.email],['DOB',s.dob||'—'],['Course',s.course],['Batch',s.slot],['Address',s.address||'—',true]].map(f=>'<div'+(f[2]?' style="grid-column:span 2"':'')+'><div style="color:var(--muted);font-size:10px;margin-bottom:2px">'+f[0]+'</div><div style="font-weight:600;font-size:12px">'+f[1]+'</div></div>').join(''));
+  var profRows=[
+    ['Father Name',s.father||'—'],['Mobile',s.mobile||'—'],
+    ['Email',s.email||'—'],['Date of Birth',s.dob||'—'],
+    ['Course',s.course||'—'],['Batch Slot',s.slot||'—'],
+    ['Address',s.address||'—',true]
+  ];
+  setHTML('prof-details', profRows.map(function(f){
+    return '<div'+(f[2]?' style="grid-column:span 2"':'')+'>'+
+           '<div style="color:var(--muted);font-size:10px;margin-bottom:2px">'+f[0]+'</div>'+
+           '<div style="font-weight:600;font-size:12px">'+f[1]+'</div></div>';
+  }).join(''));
 
-  // Reports
-  setText('r-present',p);setText('r-absent',ab);setText('r-pct',pc+'%');setText('r-total',total);
-  setHTML('report-bars',buildReportBars(rec,pc));
+  setText('r-present', p); setText('r-pct', pc+'%');
+  setText('r-total',   p); setText('r-absent', ab);
+  setText('r-may-pct', pc+'%');
+  document.getElementById('r-may-bar').style.width=pc+'%';
 
-  // Calendar + log
-  buildCalendar(rec);
-  buildAttLog(rec);
+  var notifHTML=DB.notifications.map(notifCard).join('');
+  var fallback='<div style="color:var(--muted);font-size:12px;padding:10px">No notifications</div>';
+  setHTML('dash-notifs',         notifHTML||fallback);
+  setHTML('student-notifs-list', notifHTML||fallback);
 
-  // Notifications
-  var nh=DB.notifications.map(notifCard).join('');
-  setHTML('dash-notifs',nh||'<div style="color:var(--muted);font-size:12px;padding:8px">No notifications</div>');
-  setHTML('student-notifs-list',nh||'<div style="color:var(--muted);font-size:12px;padding:8px">No notifications</div>');
+  // Update today mark-button state
+  var btn=document.getElementById('att-main-btn');
+  if(attMarkedToday||rec[todayKey()]){
+    if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓'; btn.style.opacity='0.6'; btn.disabled=true;}
+    document.getElementById('att-status-pill').className='pill p-green';
+    setText('att-status-pill','Present ✓');
+  } else {
+    if(btn){btn.innerHTML='<i class="ti ti-check"></i> Mark Present'; btn.style.opacity=''; btn.disabled=false;}
+  }
 }
 
 function notifCard(n){
   var bg={amber:'#fef3c7',blue:'#dbeafe',green:'#d1fae5',red:'#fee2e2'};
   var fg={amber:'var(--amber)',blue:'var(--blue)',green:'var(--green)',red:'var(--red)'};
-  return '<div class="notif-item"><div class="notif-ico" style="background:'+(bg[n.type]||'#f3f4f6')+';color:'+(fg[n.type]||'var(--muted)')+'"><i class="ti '+n.icon+'"></i></div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+n.title+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+n.msg+'</div></div><div style="font-size:10px;color:var(--muted);white-space:nowrap;margin-left:8px">'+n.time+'</div></div>';
+  return '<div class="notif-item">'+
+    '<div class="notif-ico" style="background:'+(bg[n.type]||'#f3f4f6')+';color:'+(fg[n.type]||'var(--muted)')+'">'+
+    '<i class="ti '+n.icon+'"></i></div>'+
+    '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+n.title+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+n.msg+'</div></div>'+
+    '<div style="font-size:10px;color:var(--muted);white-space:nowrap;margin-left:8px">'+n.time+'</div></div>';
 }
 
-function buildReportBars(rec,overallPct){
-  var months=[{n:'January',y:2026,m:0},{n:'February',y:2026,m:1},{n:'March',y:2026,m:2},{n:'April',y:2026,m:3},{n:'May',y:2026,m:4}];
-  var now=new Date();
-  var out='';
-  months.forEach(function(mo){
-    var keys=Object.keys(rec||{}).filter(function(k){var d=new Date(k);return d.getFullYear()===mo.y&&d.getMonth()===mo.m;});
-    var p=keys.filter(k=>(rec[k].status||'Present')==='Present').length;
-    var t=keys.length;
-    var pct=t?Math.round(p/t*100):0;
-    var isNow=(mo.m===now.getMonth()&&mo.y===now.getFullYear());
-    var disp=t>0?pct+'%':(isNow&&overallPct>0?overallPct+'%':'—');
-    var w=t>0?pct:(isNow?overallPct:0);
-    out+='<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>'+mo.n+(isNow?' (so far)':'')+'</span><span style="font-weight:600">'+disp+'</span></div><div class="pbar"><div class="pbar-fill" style="width:'+w+'%"></div></div></div>';
-  });
-  return out||'<div style="color:var(--muted);font-size:12px">No records yet. Mark attendance to see reports.</div>';
-}
-
+/* ==================== ATTENDANCE CALENDAR & LOG ==================== */
 function buildCalendar(rec){
-  var now=new Date(), year=now.getFullYear(), month=now.getMonth(), todayD=now.getDate();
-  var firstDay=new Date(year,month,1).getDay(), daysInMonth=new Date(year,month+1,0).getDate();
-  var h='<div class="cal-hd">S</div><div class="cal-hd">M</div><div class="cal-hd">T</div><div class="cal-hd">W</div><div class="cal-hd">T</div><div class="cal-hd">F</div><div class="cal-hd">S</div>';
-  for(var i=0;i<firstDay;i++) h+='<div class="cal-cell cal-empty">.</div>';
+  var cal=document.getElementById('att-calendar'); if(!cal) return;
+  var now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  var firstDay=new Date(y,m,1).getDay();
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var today=now.getDate();
+  var days=['S','M','T','W','T','F','S'];
+  var html=days.map(function(d){return '<div class="cal-hd">'+d+'</div>';}).join('');
+  for(var i=0;i<firstDay;i++) html+='<div class="cal-cell" style="color:transparent">·</div>';
   for(var d=1;d<=daysInMonth;d++){
-    var key=year+'-'+pad(month+1)+'-'+pad(d);
+    var key=y+'-'+pad(m+1)+'-'+pad(d);
     var r=rec[key];
-    var cls='cal-cell';
-    if(d===todayD){ cls+=r&&r.status==='Present'?' cal-today-present':' cal-today'; }
-    else if(r){ cls+=r.status==='Present'?' cal-present':' cal-absent'; }
-    else if(d<todayD){ cls+=' cal-absent'; } // missed days = absent
-    else { cls+=' cal-future'; }
-    h+='<div class="'+cls+'">'+d+'</div>';
+    var cls='';
+    if(d===today) cls='cal-today';
+    else if(d>today) cls='cal-future';
+    else if(r&&r.status==='Present') cls='cal-present';
+    else if(r&&r.status==='Absent')  cls='cal-absent';
+    html+='<div class="cal-cell '+cls+'">'+d+'</div>';
   }
-  setHTML('att-calendar',h);
-  setText('cal-title',now.toLocaleDateString('en-IN',{month:'long',year:'numeric'}));
+  cal.innerHTML=html;
+  var lbl=document.getElementById('cal-month-lbl');
+  if(lbl) lbl.textContent=now.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 }
 
 function buildAttLog(rec){
-  var keys=Object.keys(rec||{}).sort().reverse().slice(0,10);
-  if(keys.length===0){setHTML('att-log-body','<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:14px">Koi attendance record nahi hai abhi tak</td></tr>');return;}
-  var html=keys.map(function(k){
-    var r=rec[k], d=new Date(k);
-    var status=r.status||'Present';
-    return '<tr><td>'+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+'</td><td>'+d.toLocaleDateString('en-IN',{weekday:'short'})+'</td><td>'+(r.time||'—')+'</td><td><span class="pill '+(status==='Present'?'p-green':'p-red')+'">'+status+'</span></td><td><span class="pill p-blue">'+(r.method||'QR')+'</span></td></tr>';
+  var tbody=document.getElementById('att-log-body'); if(!tbody) return;
+  var keys=Object.keys(rec).sort(function(a,b){return b.localeCompare(a);}).slice(0,20);
+  if(keys.length===0){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">No attendance records yet</td></tr>'; return; }
+  tbody.innerHTML=keys.map(function(k){
+    var r=rec[k];
+    var d=new Date(k);
+    var dayName=d.toLocaleDateString('en-IN',{weekday:'short'});
+    var dateStr=d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    var cls=r.status==='Present'?'p-green':'p-red';
+    return '<tr><td>'+dateStr+'</td><td>'+dayName+'</td><td>'+(r.time||'—')+'</td>'+
+           '<td><span class="pill '+cls+'">'+r.status+'</span></td>'+
+           '<td><span class="pill p-blue">'+(r.method||'Manual')+'</span></td></tr>';
   }).join('');
-  setHTML('att-log-body',html);
 }
 
-/* ==================== ★ MARK ATTENDANCE ==================== */
+/* ==================== MARK ATTENDANCE ==================== */
 function markAttendance(){
-  var rec=ATT_CACHE[currentUser.id]||{};
-  if(rec[todayKey()]&&rec[todayKey()].status==='Present'){alert('Aaj ki attendance pehle se mark ho chuki hai!');return;}
+  var rec=ATT_CACHE[currentUser&&currentUser.id]||{};
+  if(attMarkedToday||rec[todayKey()]){ alert('Aaj ki attendance pehle se mark ho chuki hai!'); return; }
   saveAtt();
 }
 function markQR(){
-  var rec=ATT_CACHE[currentUser.id]||{};
-  var todayRec=rec[todayKey()];
-  if(todayRec&&todayRec.status==='Present'){
-    showEl('att-already');hideEl('att-ok');
-    setText('att-already-time',todayStr()+' • '+todayRec.time);
-    return;
-  }
+  var rec=ATT_CACHE[currentUser&&currentUser.id]||{};
+  if(attMarkedToday||rec[todayKey()]){ showEl('att-ok'); return; }
   saveAtt();
 }
 
 function saveAtt(){
+  if(!currentUser){ alert('Please login first.'); return; }
   var now=new Date();
   var timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   var key=todayKey();
-  var record={status:'Present',time:timeStr,method:'QR Scan',date:todayStr(),studentId:currentUser.id,studentName:currentUser.name,course:currentUser.course,slot:currentUser.slot};
 
-  // ★ Update cache immediately (no flicker on refresh)
+  // Build record with THIS student's ID — very explicit
+  var record={
+    status:'Present',
+    time:timeStr,
+    method:'QR Scan',
+    date:todayStr(),
+    dateKey:key,
+    studentId:currentUser.id,        // CRITICAL: This student's ID only
+    studentName:currentUser.name,
+    course:currentUser.course,
+    slot:currentUser.slot
+  };
+
+  // Update local cache for THIS student only
   if(!ATT_CACHE[currentUser.id]) ATT_CACHE[currentUser.id]={};
   ATT_CACHE[currentUser.id][key]=record;
+  attMarkedToday=true;
   currentUser.present=(currentUser.present||0)+1;
 
-  // Show success UI
-  showEl('att-ok');hideEl('att-already');
-  setText('att-marked-info',todayStr()+' • '+timeStr);
-  document.getElementById('att-status-pill').className='pill p-green';setText('att-status-pill','Present ✓');
+  // Update UI
+  showEl('att-ok'); hideEl('att-already');
+  setText('att-marked-info', todayStr()+' • '+timeStr);
+  document.getElementById('att-status-pill').className='pill p-green';
+  setText('att-status-pill','Present ✓');
   var btn=document.getElementById('att-main-btn');
-  if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓';btn.style.opacity='0.6';btn.disabled=true;}
+  if(btn){btn.innerHTML='<i class="ti ti-check"></i> Marked ✓'; btn.style.opacity='0.6'; btn.disabled=true;}
   buildCalendar(ATT_CACHE[currentUser.id]);
+  buildAttLog(ATT_CACHE[currentUser.id]);
   renderStudentUI();
 
-  // ★ Save to Firebase Firestore — persists across refresh/login
-  if(window._fb){
-    var fb=window._fb;
-    fb.setDoc(fb.doc(fb.db,'attendance_records',currentUser.id+'_'+key),Object.assign({},record,{studentId:currentUser.id,dateKey:key}))
-      .then(function(){
-        console.log('✅ Attendance saved to Firebase');
-        // Update student total counts in approvedStudents doc
-        syncStudentCounts(currentUser.id,currentUser.email);
-      })
-      .catch(function(e){console.warn('Attendance save error:',e);});
+  // Save to Firebase: doc ID = studentId_dateKey (unique per student per day)
+  var fb=FB();
+  if(fb){
+    var docId=currentUser.id+'_'+key; // e.g. "RI-2026-0001_2026-05-16"
+    fb.setDoc(fb.doc(fb.db,'attendance_records',docId), record)
+      .then(function(){ console.log('✅ Attendance saved: '+docId); })
+      .catch(function(e){ console.warn('Attendance save error:',e); });
   }
 }
 
-function syncStudentCounts(studentId,email){
-  if(!window._fb) return;
-  var fb=window._fb, rec=ATT_CACHE[studentId]||{};
-  var p=presentCount(rec), ab=absentCount(rec);
-  fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
-    snap.forEach(function(d){
-      if(d.data().email&&d.data().email.toLowerCase()===email.toLowerCase())
-        fb.updateDoc(fb.doc(fb.db,'approvedStudents',d.id),{present:p,absent:ab}).catch(console.warn);
-    });
-  }).catch(console.warn);
-}
-
-/* ==================== ADMIN LOAD ==================== */
+/* ==================== ADMIN: LOAD DATA ==================== */
 function loadAdminData(){
   showLoading('Loading admin data...');
-  Promise.all([loadPendingFB(),loadApprovedFB(),loadAllAttFB()]).then(function(){
-    hideLoading();renderAdminStats();renderStudentTable(DB.students);renderFeeTable(DB.students);renderAdminAttTable();renderRecentRegs();
-  }).catch(function(e){hideLoading();console.warn(e);renderAdminStats();renderStudentTable(DB.students);});
+  var fb=FB();
+  if(!fb){ hideLoading(); renderAllAdmin(); return; }
+
+  // Load pending + approved + ALL attendance in parallel
+  Promise.all([
+    loadPendingFB(fb),
+    loadApprovedFB(fb),
+    loadAllAttFB(fb)
+  ]).then(function(){
+    hideLoading(); renderAllAdmin();
+  }).catch(function(e){
+    hideLoading(); console.warn(e); renderAllAdmin();
+  });
 }
 
-function loadPendingFB(){
-  if(!window._fb) return Promise.resolve();
-  return window._fb.getDocs(window._fb.collection(window._fb.db,'pendingRegs')).then(function(snap){
+function renderAllAdmin(){
+  renderAdminStats();
+  renderStudentTable(DB.students);
+  renderFeeTable(DB.students);
+  renderAdminAttTable(DB.students);
+  renderRecentRegs();
+}
+
+function loadPendingFB(fb){
+  return fb.getDocs(fb.collection(fb.db,'pendingRegs')).then(function(snap){
     DB.pendingRegs=[];
-    snap.forEach(function(d){var data=d.data();data.fbDocId=d.id;if(!DB.students.find(s=>s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase())) DB.pendingRegs.push(data);});
+    snap.forEach(function(d){
+      var data=d.data(); data.fbDocId=d.id;
+      var exists=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
+      if(!exists) DB.pendingRegs.push(data);
+    });
     updatePendingBadge();
-  }).catch(console.warn);
+  }).catch(function(e){ console.warn('loadPendingFB:',e); });
 }
 
-function loadApprovedFB(){
-  if(!window._fb) return Promise.resolve();
-  return window._fb.getDocs(window._fb.collection(window._fb.db,'approvedStudents')).then(function(snap){
-    snap.forEach(function(d){var data=d.data();data.fbDocId=d.id;data.approved=true;if(!DB.students.find(s=>s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase())) DB.students.push(data);});
-  }).catch(console.warn);
+function loadApprovedFB(fb){
+  return fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
+    snap.forEach(function(d){
+      var data=d.data(); data.fbDocId=d.id; data.approved=true;
+      var exists=DB.students.some(function(s){ return s.email&&data.email&&s.email.toLowerCase()===data.email.toLowerCase(); });
+      if(!exists) DB.students.push(data);
+    });
+  }).catch(function(e){ console.warn('loadApprovedFB:',e); });
 }
 
-// ★ Load attendance for ALL students (admin view — real present/absent counts)
-function loadAllAttFB(){
-  if(!window._fb) return Promise.resolve();
-  var fb=window._fb;
-  var promises=DB.students.map(function(s){
-    var qa=window._fb.query(fb.collection(fb.db,'attendance_records'),fb.where('studentId','==',s.id));
-      return fb.getDocs(qa).then(function(snap){
+/*
+  KEY FIX: Load attendance for EACH student SEPARATELY using studentId filter.
+  This guarantees Student A's records go into ATT_CACHE[A.id]
+  and Student B's records go into ATT_CACHE[B.id] — NEVER mixed.
+*/
+function loadAllAttFB(fb){
+  var promises=DB.students.map(function(student){
+    var sid=student.id;
+    var q=fb.query(fb.collection(fb.db,'attendance_records'), fb.where('studentId','==',sid));
+    return fb.getDocs(q).then(function(snap){
       var rec={};
-      snap.forEach(function(d){var dd=d.data();if(dd.dateKey) rec[dd.dateKey]=dd; else rec[d.id]=dd;});
-      ATT_CACHE[s.id]=rec;  // Always set, even if empty {} — so getP knows Firebase was checked
-      s.present=presentCount(rec);
-      s.absent=absentCount(rec);
-    }).catch(function(){});
+      snap.forEach(function(d){
+        var dd=d.data();
+        // Triple-check: only store if studentId matches exactly
+        if(dd.studentId===sid){
+          var k=dd.dateKey||d.id;
+          rec[k]=dd;
+        }
+      });
+      ATT_CACHE[sid]=rec; // Store under THIS student's ID only
+    }).catch(function(e){ 
+      ATT_CACHE[sid]={}; 
+      console.warn('Att load fail for '+sid+':',e); 
+    });
   });
   return Promise.all(promises);
 }
 
+/* ==================== ADMIN RENDER FUNCTIONS ==================== */
 function renderAdminStats(){
-  setText('ad-total',DB.students.length);
-  var todayPresent=DB.students.filter(function(s){var r=ATT_CACHE[s.id]||{};return r[todayKey()]&&r[todayKey()].status==='Present';}).length;
-  setText('ad-today',todayPresent);
-  setText('ad-pending-fee',DB.students.filter(s=>s.feeStatus!=='Paid').length);
-  setText('ad-new',DB.pendingRegs.length);
+  setText('ad-total', DB.students.length);
+  var tk=todayKey();
+  var todayPresent=DB.students.filter(function(s){
+    var r=ATT_CACHE[s.id]||{};
+    return r[tk]&&r[tk].status==='Present';
+  }).length;
+  setText('ad-today',       todayPresent);
+  setText('ad-pending-fee', DB.students.filter(function(s){ return s.feeStatus!=='Paid'; }).length);
+  setText('ad-new',         DB.pendingRegs.length);
 }
 
 function renderRecentRegs(){
   var list=DB.pendingRegs.slice().reverse().slice(0,5);
-  setHTML('recent-regs-list',list.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:7px;flex-wrap:wrap"><div class="av" style="width:36px;height:36px;font-size:13px;background:var(--grad)">'+initials(s.name)+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+s.name+'</div><div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div><div style="font-size:10px;color:var(--blue)">'+s.email+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn-pri" style="font-size:10px;padding:5px 10px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')"><i class="ti ti-check"></i> Approve</button><button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')"><i class="ti ti-x"></i> Reject</button></div></div>').join('')||'<div style="color:var(--muted);font-size:12px;padding:8px">No pending registrations</div>');
+  setHTML('recent-regs-list', list.length===0
+    ? '<div style="color:var(--muted);font-size:12px;padding:8px">No pending registrations</div>'
+    : list.map(function(s){
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:7px;flex-wrap:wrap">'+
+          '<div class="av" style="width:36px;height:36px;font-size:13px;background:var(--grad)">'+initials(s.name)+'</div>'+
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+s.name+'</div>'+
+          '<div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div>'+
+          '<div style="font-size:10px;color:var(--blue)">'+s.email+'</div></div>'+
+          '<div style="display:flex;gap:6px;flex-shrink:0">'+
+          '<button class="btn-pri" style="font-size:10px;padding:5px 10px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')">'+
+          '<i class="ti ti-check"></i> Approve</button>'+
+          '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')">'+
+          '<i class="ti ti-x"></i> Reject</button></div></div>';
+      }).join('')
+  );
 }
 
-// ★ Admin student table — real Present/Absent columns
 function renderStudentTable(list){
-  setHTML('student-tbody',list.map((s,i)=>{
-    var p=getP(s),ab=getAb(s),pc=getPct(s);
-    return '<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:28px;height:28px;font-size:10px;background:'+avatarColor(i)+'">'+initials(s.name)+'</div><div><div style="font-size:12px;font-weight:600">'+s.name+'</div><div style="font-size:10px;color:var(--muted)">'+s.id+'</div></div></div></td>'+
-      '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
-      '<td class="hide-mob" style="font-size:12px">'+s.slot+'</td>'+
-      '<td class="hide-mob" style="font-size:12px">'+s.mobile+'</td>'+
-      '<td style="font-size:13px;font-weight:800;color:var(--green)">'+p+'</td>'+
-      '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
-      '<td style="font-size:13px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
-      '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>'+
-      '<td style="white-space:nowrap"><button class="btn-out btn-sm" data-sid="'+s.id+'" onclick="viewStudentBtn(this)">View</button> <button class="btn-out btn-sm btn-danger" data-sid="'+s.id+'" onclick="deleteStudentBtn(this)" title="Delete"><i class="ti ti-trash"></i></button></td></tr>';
-  }).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No students</td></tr>');
+  setHTML('student-tbody', list.length===0
+    ? '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No students found</td></tr>'
+    : list.map(function(s,i){
+        var p=getP(s.id), ab=getAb(s.id), pc=getPct(s.id);
+        var pColor=pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)';
+        var tk=todayKey();
+        var todayRec=(ATT_CACHE[s.id]||{})[tk];
+        var todayPill=todayRec
+          ? '<span class="pill '+(todayRec.status==='Present'?'p-green':'p-red')+'">'+todayRec.status+'</span>'
+          : '<span class="pill p-amber">Not Marked</span>';
+        return '<tr>'+
+          '<td><div style="display:flex;align-items:center;gap:8px">'+
+          '<div class="av" style="width:28px;height:28px;font-size:10px;background:'+avatarColor(i)+'">'+initials(s.name)+'</div>'+
+          '<div><div style="font-size:12px;font-weight:600">'+s.name+'</div>'+
+          '<div style="font-size:10px;color:var(--muted)">'+s.id+'</div></div></div></td>'+
+          '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
+          '<td class="hide-mob" style="font-size:11px">'+s.slot+'</td>'+
+          '<td class="hide-mob" style="font-size:11px">'+s.mobile+'</td>'+
+          '<td style="font-size:13px;font-weight:800;color:var(--green)">'+p+'</td>'+
+          '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
+          '<td style="font-size:13px;font-weight:800;color:'+pColor+'">'+pc+'%</td>'+
+          '<td>'+todayPill+'</td>'+
+          '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>'+
+          '<td style="white-space:nowrap">'+
+          '<button class="btn-out btn-sm" data-sid="'+s.id+'" onclick="viewStudentByBtn(this)">View</button> '+
+          '<button class="btn-out btn-sm btn-danger" data-sid="'+s.id+'" onclick="deleteStudentByBtn(this)" title="Delete"><i class="ti ti-trash"></i></button>'+
+          '</td></tr>';
+      }).join('')
+  );
 }
 
 function filterStudents(){
   var q=(document.getElementById('search-inp').value||'').toLowerCase();
   var c=document.getElementById('filter-course').value;
-  renderStudentTable(DB.students.filter(s=>(!q||(s.name.toLowerCase().includes(q)||s.email.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)))&&(!c||s.course===c)));
+  var list=DB.students.filter(function(s){
+    var m=!q||(s.name.toLowerCase().includes(q)||(s.email&&s.email.toLowerCase().includes(q))||s.id.toLowerCase().includes(q));
+    return m&&(!c||s.course===c);
+  });
+  renderStudentTable(list);
+}
+
+function renderAdminAttTable(list){
+  var today=todayStr(), tk=todayKey();
+  list=list||DB.students;
+  setHTML('admin-att-body', list.map(function(s){
+    var p=getP(s.id), ab=getAb(s.id), pc=getPct(s.id);
+    var rec=ATT_CACHE[s.id]||{};
+    var todayRec=rec[tk];
+    var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-amber';
+    var todayTxt=todayRec?todayRec.status:'Absent';
+    var todayTime=todayRec&&todayRec.time?todayRec.time:'—';
+    return '<tr>'+
+      '<td><div style="font-size:12px;font-weight:600">'+s.name+'</div>'+
+      '<div style="font-size:10px;color:var(--muted)">'+s.id+'</div></td>'+
+      '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
+      '<td class="hide-mob" style="font-size:11px">'+s.slot+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:var(--green)">'+p+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:var(--red)">'+ab+'</td>'+
+      '<td style="font-size:13px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
+      '<td>'+todayTime+'</td>'+
+      '<td><span class="pill '+todayCls+'">'+todayTxt+'</span></td>'+
+      '</tr>';
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No students</td></tr>');
 }
 
 function renderFeeTable(list){
-  setHTML('fee-tbody',list.map(s=>'<tr><td style="font-size:12px;font-weight:600">'+s.name+'</td><td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td><td style="font-size:12px">₹'+s.feeAmt+'</td><td class="hide-mob" style="font-size:12px">15 May</td><td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td><td>'+(s.feeStatus!=='Paid'?'<button class="btn-out btn-sm" onclick="sendRemind(\''+s.name+'\')">Remind</button>':'<span style="color:var(--green);font-size:11px">✓ Done</span>')+'</td></tr>').join(''));
-  setText('fee-pending-amt','₹'+list.filter(s=>s.feeStatus!=='Paid').reduce((a,s)=>a+(s.feeAmt||0),0));
-  setText('fee-due-count',list.filter(s=>s.feeStatus==='Pending').length);
-  setText('fee-overdue-count',list.filter(s=>s.feeStatus==='Overdue').length);
-}
-
-// ★ Admin Attendance Records — total present, absent, today status per student
-function renderAdminAttTable(){
-  var cf=(document.getElementById('att-filter-course')||{}).value||'';
-  var sf=(document.getElementById('att-filter-status')||{}).value||'';
-  var today=todayKey();
-  var list=DB.students.filter(s=>!cf||s.course===cf);
-  if(sf){
-    list=list.filter(function(s){var r=ATT_CACHE[s.id]||{};var ts=(r[today]&&r[today].status)||'Absent';return ts===sf;});
-  }
-  var html=list.map(function(s){
-    var rec=ATT_CACHE[s.id]||{};
-    var p=getP(s),ab=getAb(s),pc=getPct(s);
-    var todayRec=rec[today];
-    var todayStatus=todayRec?todayRec.status:'—';
-    var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-gray';
+  list=list||DB.students;
+  setHTML('fee-tbody', list.map(function(s){
     return '<tr>'+
-      '<td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="width:26px;height:26px;font-size:9px;background:var(--grad)">'+initials(s.name)+'</div><div><div style="font-size:12px;font-weight:600">'+s.name+'</div><div style="font-size:10px;color:var(--muted)">'+s.id+'</div></div></div></td>'+
+      '<td style="font-size:12px;font-weight:600">'+s.name+'</td>'+
       '<td><span class="pill '+courseColor(s.course)+'">'+s.course+'</span></td>'+
-      '<td class="hide-mob" style="font-size:12px">'+s.slot+'</td>'+
-      '<td style="font-size:14px;font-weight:800;color:var(--green)">'+p+'<span style="font-size:10px;font-weight:400;color:var(--muted)"> days</span></td>'+
-      '<td style="font-size:14px;font-weight:800;color:var(--red)">'+ab+'<span style="font-size:10px;font-weight:400;color:var(--muted)"> days</span></td>'+
-      '<td style="font-size:14px;font-weight:800;color:'+(pc>=80?'var(--green)':pc>=60?'var(--amber)':'var(--red)')+'">'+pc+'%</td>'+
-      '<td><span class="pill '+todayCls+'">'+todayStatus+(todayRec&&todayRec.time?' '+todayRec.time:'')+'</span></td></tr>';
-  }).join('');
-  setHTML('admin-att-body',html||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No records</td></tr>');
+      '<td style="font-size:12px">₹'+s.feeAmt+'</td>'+
+      '<td class="hide-mob" style="font-size:12px">15 May</td>'+
+      '<td><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></td>'+
+      '<td>'+(s.feeStatus!=='Paid'
+        ? '<button class="btn-out btn-sm" onclick="sendRemind(\''+s.name+'\')">Remind</button>'
+        : '<span style="font-size:11px;color:var(--green)">✓ Done</span>')+'</td></tr>';
+  }).join(''));
+  setText('fee-pending-amt','₹'+list.filter(function(s){return s.feeStatus!=='Paid';}).reduce(function(a,s){return a+(s.feeAmt||0);},0));
+  setText('fee-due-count',  list.filter(function(s){return s.feeStatus==='Pending';}).length);
+  setText('fee-overdue-count',list.filter(function(s){return s.feeStatus==='Overdue';}).length);
 }
 
-/* ==================== APPROVE / REJECT ==================== */
-function renderPendingList(){ loadPendingFB().then(function(){_renderPendingUI();}); }
-function _renderPendingUI(){
-  var list=DB.pendingRegs;
-  document.getElementById('no-pending').style.display=list.length===0?'block':'none';
-  setHTML('pending-list',list.map(s=>'<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><div class="av" style="width:40px;height:40px;font-size:14px;border-radius:12px;background:var(--grad)">'+initials(s.name)+'</div><div><div style="font-size:13px;font-weight:700">'+s.name+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+s.email+' • '+s.mobile+'</div><div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div><div style="font-size:10px;color:var(--blue);margin-top:2px">ID: '+s.id+' | '+s.regDate+'</div></div></div><div style="display:flex;gap:7px;flex-shrink:0"><button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')"><i class="ti ti-check"></i> Approve</button><button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')"><i class="ti ti-x"></i> Reject</button></div></div></div>').join(''));
+/* ==================== STUDENT DETAIL MODAL ==================== */
+/*
+  KEY FIX: Use a dedicated variable 'modalStudent' to avoid closure/scope bugs.
+  Never reuse variable name 's' inside find() callback.
+*/
+var modalStudent = null;
+
+function viewStudentByBtn(btn){
+  var sid=btn.getAttribute('data-sid');
+  openStudentModal(sid);
 }
 
-function approveStudent(email){
-  var idx=DB.pendingRegs.findIndex(s=>s.email===email); if(idx===-1) return;
-  var s=Object.assign({},DB.pendingRegs[idx]); var fbDocId=s.fbDocId; s.approved=true;
-  DB.students.push(s);DB.pendingRegs.splice(idx,1);
-  if(window._fb&&fbDocId){var fb=window._fb;fb.addDoc(fb.collection(fb.db,'approvedStudents'),s).then(function(){fb.deleteDoc(fb.doc(fb.db,'pendingRegs',fbDocId)).catch(console.warn);}).catch(console.warn);}
-  loadAdminData();alert('✅ "'+s.name+'" approved!\nLogin: '+s.email);
-}
-function rejectStudent(email){
-  var s=DB.pendingRegs.find(s=>s.email===email); if(!s) return;
-  if(!confirm('Reject registration for '+s.name+'?')) return;
-  var idx=DB.pendingRegs.findIndex(s=>s.email===email);
-  if(window._fb&&s.fbDocId) window._fb.deleteDoc(window._fb.doc(window._fb.db,'pendingRegs',s.fbDocId)).catch(console.warn);
-  DB.pendingRegs.splice(idx,1);loadAdminData();
-  alert('"'+s.name+'" ki registration reject kar di gayi.');
-}
+function openStudentModal(sid){
+  // Find student by id — use a dedicated variable, no shadowing
+  var found=null;
+  for(var i=0;i<DB.students.length;i++){
+    if(DB.students[i].id===sid){ found=DB.students[i]; break; }
+  }
+  if(!found){ alert('Student not found: '+sid); return; }
+  modalStudent=found; // Store globally so modal buttons work
 
-/* ==================== STUDENT DETAIL MODAL (Admin) ==================== */
-function viewStudent(id){
-  var s=DB.students.find(s=>s.id===id); if(!s) return;
-  var rec=ATT_CACHE[s.id]||{};
-  var p=getP(s),ab=getAb(s),pc=getPct(s);
-  var today=todayKey(), todayRec=rec[today];
-  var todayStatus=todayRec?todayRec.status:'Not Marked';
+  var st=found;
+  var rec=ATT_CACHE[st.id]||{};
+  var p=getP(st.id), ab=getAb(st.id), pc=getPct(st.id);
+  var tk=todayKey();
+  var todayRec=rec[tk];
+  var todayTxt=todayRec?todayRec.status:'Not Marked';
   var todayCls=todayRec?(todayRec.status==='Present'?'p-green':'p-red'):'p-amber';
 
-  // Last 7 days
+  // Last 7 days attendance pills
   var last7='';
-  for(var i=6;i>=0;i--){
-    var d=new Date();d.setDate(d.getDate()-i);
-    var k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-    var r=rec[k];
-    var cls=r?(r.status==='Present'?'p-green':'p-red'):'p-gray';
-    last7+='<div style="text-align:center"><div style="font-size:9px;color:var(--muted);margin-bottom:3px">'+d.toLocaleDateString('en-IN',{weekday:'short'})+'</div><span class="pill '+cls+'" style="font-size:9px;padding:2px 5px">'+(r?r.status:'—')+'</span></div>';
+  for(var di=6;di>=0;di--){
+    var dd=new Date(); dd.setDate(dd.getDate()-di);
+    var dk=dd.getFullYear()+'-'+pad(dd.getMonth()+1)+'-'+pad(dd.getDate());
+    var dr=rec[dk];
+    var dcls=dr?(dr.status==='Present'?'p-green':'p-red'):'p-gray';
+    last7+='<div style="text-align:center">'+
+      '<div style="font-size:9px;color:var(--muted);margin-bottom:3px">'+dd.toLocaleDateString('en-IN',{weekday:'short'})+'</div>'+
+      '<span class="pill '+dcls+'" style="font-size:9px;padding:2px 5px">'+(dr?dr.status:'—')+'</span></div>';
   }
 
+  // All attendance log (last 10)
+  var logKeys=Object.keys(rec).sort(function(a,b){return b.localeCompare(a);}).slice(0,10);
+  var logRows=logKeys.length===0
+    ? '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:12px">No records yet</td></tr>'
+    : logKeys.map(function(k){
+        var r=rec[k];
+        var d2=new Date(k);
+        return '<tr>'+
+          '<td style="font-size:11px">'+d2.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+'</td>'+
+          '<td><span class="pill '+(r.status==='Present'?'p-green':'p-red')+'" style="font-size:10px">'+r.status+'</span></td>'+
+          '<td style="font-size:11px;color:var(--muted)">'+(r.time||'—')+'</td></tr>';
+      }).join('');
+
   setHTML('modal-content',
+    // Header
     '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
-    '<div class="av" style="width:48px;height:48px;font-size:16px;border-radius:13px;background:var(--grad)">'+initials(s.name)+'</div>'+
-    '<div><div style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:15px">'+s.name+'</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+s.id+' • '+s.course+' • '+s.slot+'</div></div></div>'+
-    // Big stats
-    '<div class="g3" style="margin-bottom:12px">'+
+    '<div class="av" style="width:48px;height:48px;font-size:16px;border-radius:13px;background:var(--grad)">'+initials(st.name)+'</div>'+
+    '<div><div style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:15px">'+st.name+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+st.id+' • '+st.course+' • '+st.slot+'</div></div></div>'+
+    // Big 3 stats
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'+
     '<div style="background:#d1fae5;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#065f46">'+p+'</div><div style="font-size:10px;color:#047857;font-weight:700;margin-top:2px">PRESENT</div></div>'+
     '<div style="background:#fee2e2;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#991b1b">'+ab+'</div><div style="font-size:10px;color:#b91c1c;font-weight:700;margin-top:2px">ABSENT</div></div>'+
     '<div style="background:#dbeafe;border-radius:10px;padding:10px;text-align:center"><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:800;color:#1e40af">'+pc+'%</div><div style="font-size:10px;color:#1d4ed8;font-weight:700;margin-top:2px">ATT %</div></div>'+
     '</div>'+
     // Progress bar
-    '<div style="margin-bottom:12px"><div class="pbar" style="height:8px"><div class="pbar-fill" style="width:'+pc+'%;background:'+(pc>=80?'linear-gradient(90deg,#10b981,#34d399)':pc>=60?'linear-gradient(90deg,#f59e0b,#fbbf24)':'linear-gradient(90deg,#ef4444,#f87171)')+'"></div></div></div>'+
-    // Today status
+    '<div style="margin-bottom:12px"><div class="pbar" style="height:8px"><div class="pbar-fill" style="width:'+pc+'%;background:'+(pc>=80?'linear-gradient(90deg,#10b981,#34d399)':pc>=60?'linear-gradient(90deg,#f59e0b,#fbbf24)':'linear-gradient(90deg,#ef4444,#f87171)')+'"></div></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
+    // Today
     '<div style="background:#f8fafc;border-radius:9px;padding:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'+
-    '<div style="font-size:12px;font-weight:600">Aaj ki Attendance</div>'+
-    '<span class="pill '+todayCls+'">'+todayStatus+(todayRec&&todayRec.time?' • '+todayRec.time:'')+'</span></div>'+
+    '<div style="font-size:12px;font-weight:600">Aaj ki Attendance ('+todayStr()+')</div>'+
+    '<span class="pill '+todayCls+'">'+todayTxt+(todayRec&&todayRec.time?' • '+todayRec.time:'')+'</span></div>'+
     // Last 7 days
-    '<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.5px">LAST 7 DAYS</div>'+
+    '<div style="margin-bottom:12px">'+
+    '<div style="font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.5px">LAST 7 DAYS</div>'+
     '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">'+last7+'</div></div>'+
+    // Attendance log table
+    '<div style="margin-bottom:12px">'+
+    '<div style="font-size:10px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.5px">RECENT ATTENDANCE LOG</div>'+
+    '<div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse">'+
+    '<thead><tr><th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Date</th>'+
+    '<th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Status</th>'+
+    '<th style="padding:5px 7px;background:#f8fafc;text-align:left;border-bottom:1px solid var(--border)">Time</th></tr></thead>'+
+    '<tbody>'+logRows+'</tbody></table></div></div>'+
     // Info
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:14px">'+
-    '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">'+(s.mobile||'—')+'</div></div>'+
-    '<div><div style="color:var(--muted);font-size:10px">Fee Status</div><span class="pill '+feeColor(s.feeStatus)+'">'+s.feeStatus+'</span></div>'+
-    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;word-break:break-all">'+s.email+'</div></div>'+
+    '<div><div style="color:var(--muted);font-size:10px">Mobile</div><div style="font-weight:600">'+(st.mobile||'—')+'</div></div>'+
+    '<div><div style="color:var(--muted);font-size:10px">Fee Status</div><span class="pill '+feeColor(st.feeStatus)+'">'+st.feeStatus+'</span></div>'+
+    '<div style="grid-column:span 2"><div style="color:var(--muted);font-size:10px">Email</div><div style="font-weight:600;word-break:break-all">'+(st.email||'—')+'</div></div>'+
     '</div>'+
+    // Buttons
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\''+s.name+'\')"><i class="ti ti-send"></i> Fee Reminder</button>'+
-    '<button class="btn-out btn-sm btn-danger" onclick="closeModal();deleteStudentFromModal(\''+s.id+'\')"><i class="ti ti-trash"></i> Delete</button>'+
+    '<button class="btn-pri" style="font-size:11px;padding:7px 14px" onclick="sendRemind(\''+st.name+'\')"><i class="ti ti-send"></i> Fee Reminder</button>'+
+    '<button class="btn-out btn-sm btn-danger" onclick="confirmDeleteModal()"><i class="ti ti-trash"></i> Delete</button>'+
     '<button class="btn-out btn-sm" onclick="closeModal()"><i class="ti ti-x"></i> Close</button></div>'
   );
   showEl('student-modal');
 }
-function viewStudentBtn(btn){ viewStudent(btn.getAttribute('data-sid')); }
-function deleteStudentFromModal(id){
-  var s=DB.students.find(function(st){return st.id===id;});
-  if(!s) return;
-  if(!confirm('Student "'+s.name+'" ko DELETE karna chahte hain?\nYe action undo nahi ho sakti.')) return;
-  if(window._fb){
-    var fb=window._fb;
+
+function confirmDeleteModal(){
+  if(!modalStudent) return;
+  if(!confirm('Student "'+modalStudent.name+'" ko DELETE karna chahte hain?\nYe action undo nahi ho sakti.')) return;
+  closeModal();
+  deleteStudentById(modalStudent.id);
+  modalStudent=null;
+}
+
+function deleteStudentByBtn(btn){
+  var sid=btn.getAttribute('data-sid');
+  var found=null;
+  for(var i=0;i<DB.students.length;i++){ if(DB.students[i].id===sid){found=DB.students[i];break;} }
+  if(!found) return;
+  if(!confirm('Student "'+found.name+'" ko DELETE karna chahte hain?\nYe action undo nahi ho sakti.')) return;
+  deleteStudentById(sid);
+}
+
+function deleteStudentById(sid){
+  var found=null;
+  for(var i=0;i<DB.students.length;i++){ if(DB.students[i].id===sid){found=DB.students[i];break;} }
+  if(!found) return;
+  // Remove from Firebase
+  var fb=FB();
+  if(fb){
     fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
       snap.forEach(function(d){
-        if(d.data().email&&d.data().email.toLowerCase()===s.email.toLowerCase())
+        var dd=d.data();
+        if(dd.email&&dd.email.toLowerCase()===found.email.toLowerCase())
           fb.deleteDoc(fb.doc(fb.db,'approvedStudents',d.id)).catch(console.warn);
       });
     });
   }
-  DB.students=DB.students.filter(function(st){return st.id!==id;});
-  delete ATT_CACHE[id];
+  DB.students=DB.students.filter(function(s){ return s.id!==sid; });
+  delete ATT_CACHE[sid];
   loadAdminData();
-  alert('✅ "'+s.name+'" delete ho gaya.');
+  alert('✅ "'+found.name+'" successfully delete ho gaya.');
 }
-function deleteStudentBtn(btn){
-  var id=btn.getAttribute('data-sid');
-  var s=DB.students.find(function(st){return st.id===id;});
-  if(!s) return;
-  if(!confirm('Student "'+s.name+'" ko DELETE karna chahte hain?\n\nYe action undo nahi ho sakti.')) return;
-  // Remove from Firebase approvedStudents
-  if(window._fb && s.fbDocId){
-    window._fb.deleteDoc(window._fb.doc(window._fb.db,'approvedStudents',s.fbDocId)).catch(console.warn);
-  } else if(window._fb){
-    // Try to find by email
-    var fb=window._fb;
-    fb.getDocs(fb.collection(fb.db,'approvedStudents')).then(function(snap){
-      snap.forEach(function(d){
-        if(d.data().email&&d.data().email.toLowerCase()===s.email.toLowerCase())
-          fb.deleteDoc(fb.doc(fb.db,'approvedStudents',d.id)).catch(console.warn);
-      });
-    });
+
+function closeModal(){ hideEl('student-modal'); modalStudent=null; }
+
+/* ==================== APPROVE / REJECT ==================== */
+function approveStudent(email){
+  var idx=-1;
+  for(var i=0;i<DB.pendingRegs.length;i++){ if(DB.pendingRegs[i].email===email){idx=i;break;} }
+  if(idx===-1) return;
+  var st=Object.assign({},DB.pendingRegs[idx]); st.approved=true;
+  var fbDocId=st.fbDocId;
+  DB.students.push(st); DB.pendingRegs.splice(idx,1);
+  var fb=FB();
+  if(fb){
+    fb.addDoc(fb.collection(fb.db,'approvedStudents'),st).then(function(){
+      if(fbDocId) fb.deleteDoc(fb.doc(fb.db,'pendingRegs',fbDocId)).catch(console.warn);
+    }).catch(console.warn);
   }
-  // Remove from local array
-  DB.students=DB.students.filter(function(st){return st.id!==id;});
-  delete ATT_CACHE[id];
   loadAdminData();
-  alert('✅ Student "'+s.name+'" ko successfully delete kar diya gaya.');
+  alert('✅ "'+st.name+'" approved!\nLogin email: '+st.email);
 }
-function closeModal(){ hideEl('student-modal'); }
+
+function rejectStudent(email){
+  var found=null;
+  for(var i=0;i<DB.pendingRegs.length;i++){ if(DB.pendingRegs[i].email===email){found=DB.pendingRegs[i];break;} }
+  if(!found) return;
+  if(!confirm('Reject "'+found.name+'" ki registration?')) return;
+  var fb=FB();
+  if(fb&&found.fbDocId) fb.deleteDoc(fb.doc(fb.db,'pendingRegs',found.fbDocId)).catch(console.warn);
+  DB.pendingRegs=DB.pendingRegs.filter(function(s){ return s.email!==email; });
+  loadAdminData();
+  alert('"'+found.name+'" ki registration reject kar di gayi.');
+}
+
+function renderPendingList(){
+  var fb=FB();
+  if(fb) loadPendingFB(fb).then(function(){ _renderPendingUI(); });
+  else _renderPendingUI();
+}
+
+function _renderPendingUI(){
+  var list=DB.pendingRegs;
+  document.getElementById('no-pending').style.display=list.length===0?'block':'none';
+  setHTML('pending-list', list.map(function(s){
+    return '<div class="card" style="margin-bottom:10px">'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+      '<div class="av" style="width:40px;height:40px;font-size:14px;border-radius:12px;background:var(--grad)">'+initials(s.name)+'</div>'+
+      '<div><div style="font-size:13px;font-weight:700">'+s.name+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+s.email+' • '+s.mobile+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+s.course+' • '+s.slot+'</div>'+
+      '<div style="font-size:10px;color:var(--blue)">ID: '+s.id+' | '+( s.regDate||'—')+'</div></div></div>'+
+      '<div style="display:flex;gap:7px;flex-shrink:0">'+
+      '<button class="btn-pri" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#10b981,#34d399)" onclick="approveStudent(\''+s.email+'\')">'+
+      '<i class="ti ti-check"></i> Approve</button>'+
+      '<button class="btn-out btn-sm btn-danger" onclick="rejectStudent(\''+s.email+'\')">'+
+      '<i class="ti ti-x"></i> Reject</button></div></div></div>';
+  }).join(''));
+}
 
 /* ==================== NOTIFICATIONS / FEES ==================== */
 function sendRemind(name){ alert('Fee reminder sent to '+name+'!'); }
-function sendAllReminders(){ alert('Reminders sent to all pending/overdue students!'); }
+function sendAllReminders(){ alert('Fee reminders sent to all pending/overdue students!'); }
 function sendNotif(){
-  var t=(document.getElementById('n-title').value||'').trim(), m=(document.getElementById('n-msg').value||'').trim();
-  if(!t||!m){alert('Please fill title and message.');return;}
+  var t=(document.getElementById('n-title').value||'').trim();
+  var m=(document.getElementById('n-msg').value||'').trim();
+  if(!t||!m){ alert('Please fill title and message.'); return; }
   DB.notifications.unshift({type:'blue',icon:'ti-speakerphone',title:t,msg:m,time:'Just now'});
-  showEl('notif-sent');setTimeout(function(){hideEl('notif-sent');},3000);
-  document.getElementById('n-title').value='';document.getElementById('n-msg').value='';
+  showEl('notif-sent'); setTimeout(function(){ hideEl('notif-sent'); },3000);
+  document.getElementById('n-title').value='';
+  document.getElementById('n-msg').value='';
 }
 
 /* ==================== NAVIGATION ==================== */
 function showSec(id){
-  document.querySelectorAll('[data-sec]').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('[data-sec]').forEach(function(s){ s.classList.remove('active'); });
   var el=document.querySelector('[data-sec="'+id+'"]'); if(el) el.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   var nav=document.getElementById('nav-'+id); if(nav) nav.classList.add('active');
+
+  var fb=FB();
   if(id==='a-pending')    renderPendingList();
-  if(id==='a-students')   loadAllAttFB().then(function(){filterStudents();});
+  if(id==='a-students')   { if(fb) loadAllAttFB(fb).then(function(){filterStudents();}); else filterStudents(); }
   if(id==='a-fees')       renderFeeTable(DB.students);
-  if(id==='a-attendance') loadAllAttFB().then(function(){renderAdminAttTable();});
+  if(id==='a-attendance') { if(fb) loadAllAttFB(fb).then(function(){renderAdminAttTable();}); else renderAdminAttTable(); }
   if(id==='a-dashboard')  loadAdminData();
   if(id==='s-attendance') { buildCalendar(ATT_CACHE[currentUser&&currentUser.id]||{}); buildAttLog(ATT_CACHE[currentUser&&currentUser.id]||{}); }
   if(id==='s-reports')    renderStudentUI();
